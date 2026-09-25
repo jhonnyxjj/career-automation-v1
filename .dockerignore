@@ -1,0 +1,12 @@
+.data/
+.venv/
+.pytest_cache/
+dist/
+coverage/
+.git/
+.env
+.env.*
+tests/
+web/
+__pycache__/
+**/__pycache__/

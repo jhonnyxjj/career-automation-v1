@@ -1,0 +1,14 @@
+.data/
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+web/.next/
+web/node_modules/
+web/.git.backup/
