@@ -15,12 +15,14 @@ from .config import TECH_CATALOG
 from .finder import find_jobs
 from .models import CandidateProfile, GeneratedResume, JobListing, ResumeTemplateData, SearchProfile, SearchResult
 from .profile_parser import parse_candidate_profile
+from .profile_api import router as profile_router
 from .resume_storage import RESUMES_DIR, ResumeRepository
 from .sources import default_sources
 
 
 MAX_RESUME_SIZE = 10 * 1024 * 1024
 app = FastAPI(title="Career Automation API")
+app.include_router(profile_router)
 allowed_origins = [origin for origin in os.getenv("CAREER_ALLOWED_ORIGINS", "http://localhost:3000").split(",") if origin]
 app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_credentials=False, allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
 

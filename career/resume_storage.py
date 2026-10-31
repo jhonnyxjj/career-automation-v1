@@ -25,7 +25,9 @@ class ResumeRepository:
         return path
 
     def load_original(self, profile_id: str) -> CandidateProfile:
-        path = RESUMES_DIR / "original" / f"{profile_id}.json"
+        path = RESUMES_DIR / "confirmed" / f"{profile_id}.json"
+        if not path.exists():
+            path = RESUMES_DIR / "original" / f"{profile_id}.json"
         if not path.exists():
             raise FileNotFoundError("Perfil não encontrado.")
         return CandidateProfile.model_validate_json(path.read_text(encoding="utf-8"))
