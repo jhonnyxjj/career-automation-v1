@@ -17,6 +17,7 @@ from .models import CandidateProfile, GeneratedResume, JobListing, ResumeTemplat
 from .profile_parser import parse_candidate_profile
 from .profile_api import router as profile_router
 from .tracker_api import router as tracker_router
+from .tracker import save_search
 from .resume_storage import RESUMES_DIR, ResumeRepository
 from .sources import default_sources
 
@@ -122,7 +123,9 @@ async def search_jobs(request: JobSearchRequest) -> SearchResult:
         databases={technology for technology, category in categories.items() if category == "database"},
         cloud_devops={technology for technology, category in categories.items() if category == "cloud_devops"},
     )
-    return await find_jobs(profile, default_sources(), request.limit)
+    result = await find_jobs(profile, default_sources(), request.limit)
+    await asyncio.to_thread(save_search, candidate.id, request.model_dump(mode="json"), result)
+    return result
 
 
 @app.post("/resumes/tailor", response_model=GeneratedResumeResponse)

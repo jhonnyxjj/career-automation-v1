@@ -63,3 +63,18 @@ def test_corrupted_tracker_is_not_overwritten(client):
     with pytest.raises(json.JSONDecodeError):
         tracker.save_job(profile_id, JobListing(source="Teste", title="Dev", company="Empresa", url="https://example.com"))
     assert path.read_text(encoding="utf-8") == "{bad json"
+
+
+def test_search_endpoint_records_filters_and_result(client, monkeypatch):
+    from career import api as main_api
+    _, profile_id = client
+    job = JobListing(source="Lever", title="Backend", company="Empresa", url="https://example.com/job", score=75)
+    async def fake_search(_profile, _sources, _limit):
+        return SearchResult(jobs=[job], reports=[], stats=SearchStats())
+    monkeypatch.setattr(main_api, "find_jobs", fake_search)
+    monkeypatch.setattr(main_api, "default_sources", list)
+    response = TestClient(main_api.app).post('/jobs/search', json={"profile_id": profile_id, "regions": ["brazil"]})
+    assert response.status_code == 200
+    stored = tracker.load_tracker(profile_id)
+    assert stored["searches"][0]["filters"]["regions"] == ["brazil"]
+    assert stored["jobs"][0]["job"]["score"] == 75
