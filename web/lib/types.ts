@@ -10,6 +10,7 @@ export type CandidateProfile = {
 
 export type JobListing = {
   source: string;
+  listing_type: "job" | "recruiter_post";
   title: string;
   company: string;
   url: string;
@@ -21,10 +22,14 @@ export type JobListing = {
   apply_url?: string | null;
   technologies: string[];
   score: number;
+  filter_accepted?: boolean | null;
+  filter_reason?: string | null;
 };
 
 export type JobMatch = {
   id: string;
+  source: string;
+  listingType: "job" | "recruiter_post";
   title: string;
   company: string;
   location?: string;
@@ -36,8 +41,20 @@ export type JobMatch = {
   missingSkills: string[];
   description?: string;
   requirements?: string[];
-  sourceUrl: string;
+  originUrl: string;
+  applyUrl?: string;
   listing: JobListing;
+};
+
+export type ManualJobImport = {
+  source: string;
+  listing_type: "job" | "recruiter_post";
+  title: string;
+  company: string;
+  description: string;
+  source_url: string;
+  apply_url?: string;
+  location?: string;
 };
 
 export type SearchFilters = {

@@ -15,12 +15,9 @@ const seniorities = ["Estágio", "Júnior", "Pleno", "Sênior"];
 const regions = ["Brasil", "Estados Unidos", "Canadá", "Europa", "Reino Unido", "América Latina", "Global"];
 const workModes = ["Remoto", "Híbrido", "Presencial"];
 
-type SearchFiltersProps = { onSearch: (filters: FilterValues) => void; disabled?: boolean; loading?: boolean };
+type SearchFiltersProps = { filters: FilterValues; onChange: (filters: FilterValues) => void; onSearch: (filters: FilterValues) => void; disabled?: boolean; loading?: boolean };
 
-export function SearchFilters({ onSearch, disabled = false, loading = false }: SearchFiltersProps) {
-  const [filters, setFilters] = useState<FilterValues>({
-    seniorities: ["Estágio", "Júnior"], regions: ["Brasil", "Global"], workModes: ["Remoto"], limit: "20",
-  });
+export function SearchFilters({ filters, onChange: setFilters, onSearch, disabled = false, loading = false }: SearchFiltersProps) {
   const [open, setOpen] = useState(false);
 
   const content = (
