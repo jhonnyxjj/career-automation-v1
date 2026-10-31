@@ -65,7 +65,8 @@ def save_search(profile_id: str, filters: dict, result: SearchResult) -> None:
         state = _read(profile_id)
         ids = [_upsert(state, job)["id"] for job in result.jobs]
         for review in getattr(result, "needs_review", []):
-            _upsert(state, review.job, update_existing=False)
+            job = review.job.model_copy(update={"filter_accepted": False, "filter_reason": review.reason})
+            _upsert(state, job, update_existing=False)
         state["searches"].append({"id": str(uuid4()), "created_at": _now(), "filters": filters, "job_ids": ids, "reports": [report.model_dump(mode="json") for report in result.reports]})
         _write(profile_id, state)
 

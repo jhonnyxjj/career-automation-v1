@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from career import profile_store, tracker
-from career.models import CandidateProfile, JobListing, ResumePersonalDetails, SearchResult, SearchStats, SourceReport, SourceStatus
+from career.models import CandidateProfile, JobListing, ResumePersonalDetails, ReviewJob, SearchResult, SearchStats, SourceReport, SourceStatus
 from career.profile_store import save_confirmed
 from career.resume_storage import ResumeRepository
 from career.tracker_api import router
@@ -53,6 +53,15 @@ def test_search_is_persisted_without_erasing_application_details(client):
     assert len(restored["searches"]) == 1
     assert restored["searches"][0]["job_ids"] == [entry["id"]]
     assert restored["jobs"][0]["status"] == "interview" and restored["jobs"][0]["notes"] == "Nota"
+
+
+def test_unknown_eligibility_remains_explicit_in_tracker(client):
+    _, profile_id = client
+    job = JobListing(source="Teste", title="Backend", company="Empresa", url="https://example.com/unknown")
+    result = SearchResult(jobs=[], reports=[], stats=SearchStats(), needs_review=[ReviewJob(job=job, reason="REGION_UNKNOWN")])
+    tracker.save_search(profile_id, {}, result)
+    stored = tracker.load_tracker(profile_id)["jobs"][0]["job"]
+    assert stored["filter_accepted"] is False and stored["filter_reason"] == "REGION_UNKNOWN"
 
 
 def test_corrupted_tracker_is_not_overwritten(client):

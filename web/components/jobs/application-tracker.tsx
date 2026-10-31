@@ -45,7 +45,7 @@ export function ApplicationTracker({ profileId, refreshKey }: { profileId: strin
     {!loading && entries.length === 0 && <p className="text-sm">Busque ou importe vagas para começar.</p>}
     {entries.map((entry) => <article key={entry.id} className="space-y-2 rounded-lg border p-4">
       <p className="font-medium">{entry.job.title} · {entry.job.company}</p>
-      <p className="text-sm text-muted-foreground">{entry.job.source} · Compatibilidade {entry.job.score}%</p>
+      <p className="text-sm text-muted-foreground">{entry.job.source} · {entry.job.filter_accepted === false ? "Requer avaliação" : `Compatibilidade ${entry.job.score}%`}</p>
       <a href={entry.job.url} target="_blank" rel="noreferrer" className="text-sm underline">Ver origem</a>
       <label className="block text-sm">Situação<select className="ml-2 rounded-md border bg-background p-1" value={entry.status} onChange={(event) => change(entry.id, { status: event.target.value as Status })}>{statuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       <label className="block text-sm"><input type="checkbox" checked={entry.favorite} onChange={(event) => change(entry.id, { favorite: event.target.checked })} /> Favorita</label>
