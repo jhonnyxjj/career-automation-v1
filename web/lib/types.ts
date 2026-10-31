@@ -1,7 +1,11 @@
 export type CandidateProfile = {
   id: string;
-  personal: { name: string; headline?: string | null };
+  personal: { name: string; headline?: string | null; city?: string | null; state?: string | null; email?: string | null; phone?: string | null; linkedin?: string | null; github?: string | null; portfolio?: string | null };
+  professional_summary?: string | null;
   technical_skills: { category: string; items: string[] }[];
+  experiences: { company: string; location?: string | null; position: string; period: string; bullets: string[] }[];
+  projects: { name: string; context?: string | null; technologies: string[]; bullets: string[] }[];
+  education: { institution: string; location?: string | null; course: string; period: string }[];
 };
 
 export type JobListing = {
