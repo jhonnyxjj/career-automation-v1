@@ -29,7 +29,7 @@ def confirmed_path(profile_id: str) -> Path:
 
 def save_confirmed(profile_id: str, data: ResumeTemplateData) -> CandidateProfile:
     original = ResumeRepository().load_original(profile_id)
-    profile = CandidateProfile(id=original.id, original_resume_path=original.original_resume_path, **data.model_dump())
+    profile = CandidateProfile(id=original.id, original_resume_path=original.original_resume_path, **data.model_dump(exclude={"id", "original_resume_path"}))
     _atomic_write(confirmed_path(profile_id), profile.model_dump_json(indent=2))
     _atomic_write(RESUMES_DIR / "current-profile", profile_id)
     return profile

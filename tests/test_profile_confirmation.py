@@ -56,3 +56,13 @@ def test_main_api_restores_confirmed_profile(monkeypatch, tmp_path):
         assert client.get(f"/resumes/{generated.json()['id']}/download/tex").status_code == 200
     with TestClient(api_app) as restarted:
         assert restarted.get("/profile/current").json()["personal"]["name"] == "Confirmado"
+
+
+def test_confirming_candidate_subclass_keeps_original_identity(monkeypatch, tmp_path):
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path)
+    monkeypatch.setattr(profile_store, "RESUMES_DIR", tmp_path)
+    profile_id = str(uuid4())
+    original = CandidateProfile(id=profile_id, personal=ResumePersonalDetails(name="Original"))
+    ResumeRepository().save_original(original)
+    result = profile_store.save_confirmed(profile_id, original)
+    assert result.id == profile_id
