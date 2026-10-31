@@ -41,10 +41,18 @@ def test_confirm_rejects_unknown_or_invalid_profile(monkeypatch, tmp_path):
 
 def test_main_api_restores_confirmed_profile(monkeypatch, tmp_path):
     monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path)
+    monkeypatch.setattr("career.api.RESUMES_DIR", tmp_path)
+    monkeypatch.setattr("career.resume_storage.shutil.which", lambda _: None)
     monkeypatch.setattr(profile_store, "RESUMES_DIR", tmp_path)
     profile_id = str(uuid4())
     ResumeRepository().save_original(CandidateProfile(id=profile_id, personal=ResumePersonalDetails(name="Original")))
     with TestClient(api_app) as client:
+        job = {"source": "Teste", "title": "Backend", "company": "Empresa", "url": "https://example.com"}
+        assert client.post('/resumes/tailor', json={'profile_id': profile_id, 'job': job}).status_code == 404
         assert client.post(f"/profile/{profile_id}/confirm", json={"personal": {"name": "Confirmado"}}).status_code == 200
+        generated = client.post('/resumes/tailor', json={'profile_id': profile_id, 'job': job})
+        assert generated.status_code == 200
+        assert generated.json()['pdf_available'] is False
+        assert client.get(f"/resumes/{generated.json()['id']}/download/tex").status_code == 200
     with TestClient(api_app) as restarted:
         assert restarted.get("/profile/current").json()["personal"]["name"] == "Confirmado"

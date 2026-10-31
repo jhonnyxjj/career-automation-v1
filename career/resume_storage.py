@@ -32,6 +32,12 @@ class ResumeRepository:
             raise FileNotFoundError("Perfil não encontrado.")
         return CandidateProfile.model_validate_json(path.read_text(encoding="utf-8"))
 
+    def load_confirmed(self, profile_id: str) -> CandidateProfile:
+        path = RESUMES_DIR / "confirmed" / f"{profile_id}.json"
+        if not path.exists():
+            raise FileNotFoundError("Perfil confirmado não encontrado.")
+        return CandidateProfile.model_validate_json(path.read_text(encoding="utf-8"))
+
     def generate_tailored(self, profile: CandidateProfile, job: JobListing) -> GeneratedResume:
         generated_id = str(uuid4())
         directory = RESUMES_DIR / "tailored" / generated_id

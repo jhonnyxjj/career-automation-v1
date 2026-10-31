@@ -126,9 +126,9 @@ async def search_jobs(request: JobSearchRequest) -> SearchResult:
 @app.post("/resumes/tailor", response_model=GeneratedResumeResponse)
 async def tailor_resume(request: TailorResumeRequest) -> GeneratedResumeResponse:
     try:
-        profile = ResumeRepository().load_original(profile_id_or_404(request.profile_id))
+        profile = ResumeRepository().load_confirmed(profile_id_or_404(request.profile_id))
     except FileNotFoundError as error:
-        raise HTTPException(status_code=404, detail="Perfil não encontrado.") from error
+        raise HTTPException(status_code=404, detail="Perfil confirmado não encontrado.") from error
     generated = await asyncio.to_thread(ResumeRepository().generate_tailored, profile, request.job)
     return GeneratedResumeResponse(
         id=generated.id,
