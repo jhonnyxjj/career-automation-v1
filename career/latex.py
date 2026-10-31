@@ -44,16 +44,20 @@ class LaTeXRenderer:
         compiler = shutil.which("pdflatex")
         if compiler is None:
             raise RuntimeError("pdflatex não está instalado; o arquivo .tex foi preservado para compilação posterior.")
-        result = subprocess.run(
-            [compiler, "-interaction=nonstopmode", "-halt-on-error", "-no-shell-escape", tex_path.name],
-            cwd=tex_path.parent,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+        try:
+            result = subprocess.run(
+                [compiler, "-interaction=nonstopmode", "-halt-on-error", "-no-shell-escape", tex_path.name],
+                cwd=tex_path.parent,
+                text=True,
+                capture_output=True,
+                check=False,
+                timeout=30,
+            )
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("Tempo limite ao gerar PDF; o arquivo .tex foi preservado.") from None
         pdf_path = tex_path.with_suffix(".pdf")
         if result.returncode != 0 or not pdf_path.exists():
-            raise RuntimeError(f"Falha ao gerar PDF: {result.stdout}\n{result.stderr}")
+            raise RuntimeError("Falha ao gerar PDF; o arquivo .tex foi preservado.")
         return pdf_path
 
     def _content(self, data: ResumeTemplateData) -> str:

@@ -36,7 +36,13 @@ class ResumeRepository:
         data = ResumeTailoringService().tailor(profile, job)
         renderer = LaTeXRenderer()
         tex_path = renderer.write_tex(data, directory / "resume.tex")
-        pdf_path = renderer.render_pdf(tex_path) if shutil.which("pdflatex") else None
+        pdf_path = None
+        if shutil.which("pdflatex"):
+            try:
+                pdf_path = renderer.render_pdf(tex_path)
+            except (RuntimeError, OSError):
+                # The generated TeX remains available even if PDF compilation fails.
+                pass
         generated = GeneratedResume(
             id=generated_id,
             original_resume_id=profile.id,
