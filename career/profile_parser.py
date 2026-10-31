@@ -64,7 +64,7 @@ def parse_candidate_profile(pdf_content: bytes, profile_id: str, original_path: 
     headline = None
     if len(lines) > 1:
         candidate = lines[1]
-        if "@" not in candidate and "http" not in candidate.lower() and not re.search(r"\d{5,}", candidate) and normalized_text(candidate.rstrip(":")) not in SECTION_NAMES:
+        if re.search(r"[A-Za-zÀ-ÿ]", candidate) and "@" not in candidate and "http" not in candidate.lower() and not re.search(r"\d{5,}", candidate) and normalized_text(candidate.rstrip(":")) not in SECTION_NAMES:
             headline = candidate[:160]
     email_match = re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
     phone_match = re.search(r"(?:\+?\d[\d\s().-]{7,}\d)", text)

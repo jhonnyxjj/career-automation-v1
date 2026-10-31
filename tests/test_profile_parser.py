@@ -48,3 +48,14 @@ def test_empty_extracted_pdf_is_rejected(monkeypatch):
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
     with pytest.raises(ValueError, match="extrair texto"):
         parse_candidate_profile(b"fake", "id", Path("original.pdf"))
+
+
+def test_page_number_is_not_a_headline(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return "Pessoa Exemplo\n1"
+    class Reader:
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    assert parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal.headline is None
