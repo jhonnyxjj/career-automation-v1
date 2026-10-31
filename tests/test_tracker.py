@@ -1,0 +1,65 @@
+import json
+from uuid import uuid4
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from career import profile_store, tracker
+from career.models import CandidateProfile, JobListing, ResumePersonalDetails, SearchResult, SearchStats, SourceReport, SourceStatus
+from career.profile_store import save_confirmed
+from career.resume_storage import ResumeRepository
+from career.tracker_api import router
+
+
+@pytest.fixture
+def client(monkeypatch, tmp_path):
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr(profile_store, "RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr(tracker, "TRACKER_DIR", tmp_path / "tracker")
+    profile_id = str(uuid4())
+    profile = CandidateProfile(id=profile_id, personal=ResumePersonalDetails(name="Pessoa fictícia"))
+    ResumeRepository().save_original(profile)
+    save_confirmed(profile_id, profile)
+    app = FastAPI()
+    app.include_router(router)
+    return TestClient(app), profile_id
+
+
+def test_application_is_deduplicated_and_restored(client):
+    api, profile_id = client
+    job = {"source": "LinkedIn", "title": "Backend", "company": "Empresa", "url": "https://example.com/job", "score": 70}
+    first = api.post(f"/tracker/{profile_id}/jobs", json=job).json()
+    duplicate = api.post(f"/tracker/{profile_id}/jobs", json=job).json()
+    assert first["id"] == duplicate["id"]
+    update = {"status": "applied", "notes": "Enviada manualmente", "favorite": True}
+    assert api.post(f"/tracker/{profile_id}/jobs/{first['id']}", json=update).status_code == 200
+    assert api.post(f"/tracker/{profile_id}/jobs/{first['id']}", json=update).status_code == 200
+    saved = api.get(f"/tracker/{profile_id}").json()["jobs"]
+    assert len(saved) == 1
+    assert saved[0]["favorite"] and saved[0]["notes"] == update["notes"]
+    assert saved[0]["status"] == "applied" and len(saved[0]["history"]) == 1
+    assert saved[0]["job"]["score"] == 70
+
+
+def test_search_is_persisted_without_erasing_application_details(client):
+    api, profile_id = client
+    job = JobListing(source="Lever", title="Backend", company="Empresa", url="https://example.com/job", score=80)
+    entry = tracker.save_job(profile_id, job)
+    tracker.update_job(profile_id, entry["id"], status="interview", notes="Nota", favorite=True)
+    result = SearchResult(jobs=[job], reports=[SourceReport(source="Lever", status=SourceStatus.OK)], stats=SearchStats())
+    tracker.save_search(profile_id, {"regions": ["brazil"]}, result)
+    restored = api.get(f"/tracker/{profile_id}").json()
+    assert len(restored["searches"]) == 1
+    assert restored["searches"][0]["job_ids"] == [entry["id"]]
+    assert restored["jobs"][0]["status"] == "interview" and restored["jobs"][0]["notes"] == "Nota"
+
+
+def test_corrupted_tracker_is_not_overwritten(client):
+    _, profile_id = client
+    tracker.TRACKER_DIR.mkdir(parents=True, exist_ok=True)
+    path = tracker.TRACKER_DIR / f"{profile_id}.json"
+    path.write_text("{bad json", encoding="utf-8")
+    with pytest.raises(json.JSONDecodeError):
+        tracker.save_job(profile_id, JobListing(source="Teste", title="Dev", company="Empresa", url="https://example.com"))
+    assert path.read_text(encoding="utf-8") == "{bad json"
