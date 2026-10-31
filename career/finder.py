@@ -7,10 +7,12 @@ from pydantic import ValidationError
 
 from .deduplicator import deduplicate
 from .filters import hard_filter
-from .models import FetchResult, SearchProfile, SearchResult, SearchStats, SourceReport, SourceStatus
+from .models import FetchResult, ReviewJob, SearchProfile, SearchResult, SearchStats, SourceReport, SourceStatus
 from .normalizer import normalize_job
 from .scorer import score_job
 from .sources.base import BaseSource
+
+SOURCE_TIMEOUT_SECONDS = 40.0
 
 
 async def find_jobs(profile: SearchProfile, sources: list[BaseSource], limit: int) -> SearchResult:
@@ -20,11 +22,12 @@ async def find_jobs(profile: SearchProfile, sources: list[BaseSource], limit: in
     async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, headers={"User-Agent": "career-job-finder/0.1"}) as client:
         async def run_source(source: BaseSource) -> FetchResult:
             try:
-                async with semaphore:
-                    return await source.fetch(client)
-            except Exception as error:
+                async with asyncio.timeout(SOURCE_TIMEOUT_SECONDS):
+                    async with semaphore:
+                        return await source.fetch(client)
+            except Exception:
                 return FetchResult(
-                    report=SourceReport(source=source.name, status=SourceStatus.ERROR, message=str(error)),
+                    report=SourceReport(source=source.name, status=SourceStatus.ERROR, message="Falha ao consultar a fonte."),
                 )
 
         fetched = await asyncio.gather(*(run_source(source) for source in sources))
@@ -37,7 +40,14 @@ async def find_jobs(profile: SearchProfile, sources: list[BaseSource], limit: in
         except (ValidationError, ValueError):
             continue
     unique = deduplicate(normalized)
-    compatible = [job for job in unique if hard_filter(job, profile).accepted]
+    compatible = []
+    needs_review = []
+    for job in unique:
+        result = hard_filter(job, profile)
+        if result.accepted:
+            compatible.append(job)
+        elif result.reason in {"ROLE_AREA_UNKNOWN", "WORKPLACE_UNKNOWN", "REGION_UNKNOWN"}:
+            needs_review.append(ReviewJob(job=job, reason=result.reason))
     scored = [score_job(job, profile) for job in compatible]
     eligible = [job for job in scored if job.score >= profile.minimum_score]
 
@@ -45,6 +55,7 @@ async def find_jobs(profile: SearchProfile, sources: list[BaseSource], limit: in
 
     return SearchResult(
         jobs=ranked,
+        needs_review=needs_review[:limit],
         reports=[result.report for result in fetched],
         stats=SearchStats(
             collected=len(raw_jobs),

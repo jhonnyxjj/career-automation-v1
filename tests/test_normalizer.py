@@ -31,3 +31,8 @@ def test_normalized_text_removes_accents_and_extra_space():
 def test_infers_in_office_as_onsite():
     job = normalize_job(RawJob(source="Greenhouse", title="Backend Engineer", company="Acme", url="https://example.com/1", location="In-Office"))
     assert job.workplace_type == "onsite"
+
+
+def test_hybrid_takes_precedence_over_remote_mentions():
+    job = normalize_job(RawJob(source="Example", title="Backend Engineer", company="Acme", url="https://example.com/1", workplace_type="remote", description="Hybrid position with remote days"))
+    assert job.workplace_type == "hybrid"

@@ -45,12 +45,12 @@ def infer_seniority(text: str) -> str | None:
 
 def infer_workplace(text: str) -> str | None:
     value = normalized_text(text)
-    if re.search(r"\b(remote|remoto|home office|work from home)\b", value):
-        return "remote"
     if re.search(r"\b(hybrid|hibrido)\b", value):
         return "hybrid"
     if re.search(r"\b(on[- ]?site|in[- ]?office|presencial|office based)\b", value):
         return "onsite"
+    if re.search(r"\b(remote|remoto|home office|work from home)\b", value):
+        return "remote"
     return None
 
 
@@ -75,7 +75,7 @@ def normalize_job(raw: RawJob) -> JobListing:
         company=company,
         description=description,
         location=display_text(raw.location),
-        workplace_type=infer_workplace(raw.workplace_type or " ".join((combined_text, raw.location or ""))),
+        workplace_type=infer_workplace(" ".join((raw.workplace_type or "", combined_text, raw.location or ""))),
         seniority=infer_seniority(raw.seniority or combined_text),
         url=canonical_url(raw.url),
         apply_url=canonical_url(raw.apply_url) if raw.apply_url else None,

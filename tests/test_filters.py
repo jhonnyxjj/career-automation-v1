@@ -1,5 +1,6 @@
 from career.filters import hard_filter
 from career.models import JobListing
+import pytest
 
 from .conftest import javascript_profile
 
@@ -46,3 +47,41 @@ def test_filters_by_selected_region():
     profile = javascript_profile(allowed_regions={"brazil"})
     assert hard_filter(job(location="São Paulo, Brazil"), profile).accepted
     assert hard_filter(job(location="Toronto, Canada"), profile).reason == "REGION_NOT_ALLOWED"
+
+
+def test_global_does_not_admit_other_specific_regions():
+    profile = javascript_profile(allowed_regions={"brazil", "global"})
+    assert hard_filter(job(location="Toronto, Canada"), profile).reason == "REGION_NOT_ALLOWED"
+    assert hard_filter(job(location="Worldwide"), profile).accepted
+    assert hard_filter(job(location="Worldwide except Brazil"), profile).reason == "REGION_NOT_ALLOWED"
+    assert hard_filter(job(location="Anywhere in the United States"), profile).reason == "REGION_NOT_ALLOWED"
+
+
+@pytest.mark.parametrize("description", [
+    "Backend developer. Applicants must be based in the United States.",
+    "Backend developer. US candidates only.",
+    "Desenvolvedor backend. Vaga exclusiva para residentes dos Estados Unidos.",
+])
+def test_global_with_geographic_restrictions_needs_review(description):
+    profile = javascript_profile(allowed_regions={"brazil", "global"})
+    assert hard_filter(job(location="Worldwide", description=description), profile).reason == "REGION_UNKNOWN"
+
+
+def test_unrestricted_global_job_remains_eligible():
+    profile = javascript_profile(allowed_regions={"brazil", "global"})
+    assert hard_filter(job(location="Worldwide", description="Backend developer. We use TypeScript."), profile).accepted
+
+
+@pytest.mark.parametrize("workplace", ["hybrid", "onsite"])
+def test_remote_only_rejects_other_modes(workplace):
+    profile = javascript_profile(allowed_workplaces={"remote"})
+    assert hard_filter(job(workplace_type=workplace), profile).reason == "WORKPLACE_NOT_ALLOWED"
+
+
+def test_unknown_values_and_unmatched_area_are_not_eligible():
+    profile = javascript_profile(allowed_regions={"brazil", "global"})
+    assert hard_filter(job(workplace_type=None), profile).reason == "WORKPLACE_UNKNOWN"
+    assert hard_filter(job(location=None), profile).reason == "REGION_UNKNOWN"
+    assert hard_filter(job(title="Software Engineer", description="Software developer", location="Brazil"), profile).reason == "ROLE_AREA_UNKNOWN"
+    backend_profile = javascript_profile(role_areas={"backend"})
+    assert hard_filter(job(title="Frontend Developer", description="Frontend software developer"), backend_profile).reason == "ROLE_AREA_NOT_ALLOWED"

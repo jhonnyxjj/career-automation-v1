@@ -38,3 +38,25 @@ def test_source_failure_does_not_stop_the_pipeline(monkeypatch, tmp_path):
     assert result.reports[0].status == SourceStatus.OK
     assert result.reports[1].status == SourceStatus.ERROR
     assert not (tmp_path / ".data" / "seen_jobs.json").exists()
+
+
+def test_unknown_location_is_separate_from_eligible_jobs():
+    result = asyncio.run(find_jobs(javascript_profile(allowed_regions={"brazil"}), [GoodSource()], limit=20))
+    assert result.jobs == []
+    assert len(result.needs_review) == 1
+    assert result.needs_review[0].reason == "REGION_UNKNOWN"
+
+
+def test_slow_source_times_out_without_stopping_other_sources(monkeypatch):
+    class SlowSource(BaseSource):
+        name = "Slow"
+
+        async def fetch(self, client: httpx.AsyncClient) -> FetchResult:
+            await asyncio.sleep(1)
+            raise AssertionError("timeout should cancel this source")
+
+    monkeypatch.setattr("career.finder.SOURCE_TIMEOUT_SECONDS", 0.05)
+    result = asyncio.run(find_jobs(javascript_profile(), [GoodSource(), SlowSource()], limit=20))
+    assert len(result.jobs) == 1
+    assert result.reports[0].status == SourceStatus.OK
+    assert result.reports[1].status == SourceStatus.ERROR

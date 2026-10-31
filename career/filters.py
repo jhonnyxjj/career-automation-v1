@@ -21,15 +21,23 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
     if any(term in title for term in NON_DEVELOPMENT_TITLE_TERMS) or not any(term in text for term in DEVELOPMENT_TERMS):
         return FilterResult(accepted=False, reason="NOT_DEVELOPMENT")
     if profile.role_areas and not _matches_role_area(text, profile.role_areas):
-        return FilterResult(accepted=False, reason="ROLE_AREA_NOT_ALLOWED")
+        reason = "ROLE_AREA_NOT_ALLOWED" if _matches_role_area(text, {"backend", "frontend", "fullstack"}) else "ROLE_AREA_UNKNOWN"
+        return FilterResult(accepted=False, reason=reason)
     if profile.excluded_technologies.intersection(job.technologies):
         return FilterResult(accepted=False, reason="EXCLUDED_TECHNOLOGY")
     if profile.required_technologies and not profile.required_technologies.issubset(set(job.technologies)):
         return FilterResult(accepted=False, reason="REQUIRED_TECHNOLOGY_MISSING")
-    if job.workplace_type == "onsite" and "onsite" not in profile.allowed_workplaces:
+    if not job.workplace_type:
+        return FilterResult(accepted=False, reason="WORKPLACE_UNKNOWN")
+    if job.workplace_type not in profile.allowed_workplaces:
         return FilterResult(accepted=False, reason="WORKPLACE_NOT_ALLOWED")
-    if profile.allowed_regions and "global" not in profile.allowed_regions and not _matches_region(job, profile.allowed_regions):
-        return FilterResult(accepted=False, reason="REGION_NOT_ALLOWED")
+    if profile.allowed_regions:
+        if not job.location:
+            return FilterResult(accepted=False, reason="REGION_UNKNOWN")
+        if not _matches_region(job, profile.allowed_regions):
+            return FilterResult(accepted=False, reason="REGION_NOT_ALLOWED")
+        if _has_geographic_restriction(job.description):
+            return FilterResult(accepted=False, reason="REGION_UNKNOWN")
     if profile.recency_days is not None and job.published_at:
         reference = now or datetime.now(UTC)
         published = job.published_at if job.published_at.tzinfo else job.published_at.replace(tzinfo=UTC)
@@ -46,11 +54,13 @@ def _matches_role_area(text: str, allowed_areas: set[str]) -> bool:
         "frontend": bool(re.search(r"\b(front[ -]?end|ui|ux)\b", text)),
         "fullstack": bool(re.search(r"\b(full[ -]?stack)\b", text)),
     }
-    return not any(matches.values()) or any(matches[area] for area in allowed_areas)
+    return any(matches.get(area, False) for area in allowed_areas)
 
 
 def _matches_region(job: JobListing, allowed_regions: set[str]) -> bool:
     location = normalized_text(job.location)
+    if re.search(r"\b(except|excluding|excluded|not|exceto|excluindo|nao)\b", location):
+        return False
     aliases = {
         "brazil": ("brazil", "brasil"),
         "united_states": ("united states", "usa", "u.s."),
@@ -59,4 +69,16 @@ def _matches_region(job: JobListing, allowed_regions: set[str]) -> bool:
         "united_kingdom": ("united kingdom", "uk", "england", "reino unido"),
         "latin_america": ("latin america", "america latina", "mexico", "argentina", "chile", "colombia"),
     }
-    return bool(location) and any(alias in location for region in allowed_regions for alias in aliases.get(region, ()))
+    specific_regions = allowed_regions - {"global"}
+    if any(alias in location for region in specific_regions for alias in aliases.get(region, ())):
+        return True
+    return job.workplace_type == "remote" and "global" in allowed_regions and location in {
+        "worldwide", "global", "anywhere", "remote worldwide", "remote - worldwide",
+    }
+
+
+def _has_geographic_restriction(description: str | None) -> bool:
+    value = normalized_text(description)
+    region = r"\b(?:brazil|brasil|us|usa|united states|estados unidos|canada|europe|europa|uk|united kingdom|reino unido)\b"
+    restriction = r"\b(?:only|restricted|excluding|except|must be based|must reside|exclusiv[oa]s?|apenas|somente|exceto|residentes)\b"
+    return bool(re.search(rf"(?:{region}[^.;]{{0,100}}{restriction}|{restriction}[^.;]{{0,100}}{region})", value))

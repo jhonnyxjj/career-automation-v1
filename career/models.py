@@ -97,10 +97,16 @@ class SearchStats(BaseModel):
     compatible: int = 0
 
 
+class ReviewJob(BaseModel):
+    job: JobListing
+    reason: str
+
+
 class SearchResult(BaseModel):
     jobs: list[JobListing]
     reports: list[SourceReport]
     stats: SearchStats
+    needs_review: list[ReviewJob] = Field(default_factory=list)
 
 
 class ResumePersonalDetails(BaseModel):
