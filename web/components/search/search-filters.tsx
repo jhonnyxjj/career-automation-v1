@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { LoaderCircle, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,11 +15,11 @@ const seniorities = ["Estágio", "Júnior", "Pleno", "Sênior"];
 const regions = ["Brasil", "Estados Unidos", "Canadá", "Europa", "Reino Unido", "América Latina", "Global"];
 const workModes = ["Remoto", "Híbrido", "Presencial"];
 
-type SearchFiltersProps = { onSearch: (filters: FilterValues) => void; disabled?: boolean };
+type SearchFiltersProps = { onSearch: (filters: FilterValues) => void; disabled?: boolean; loading?: boolean };
 
-export function SearchFilters({ onSearch, disabled = false }: SearchFiltersProps) {
+export function SearchFilters({ onSearch, disabled = false, loading = false }: SearchFiltersProps) {
   const [filters, setFilters] = useState<FilterValues>({
-    seniorities: ["Estágio", "Júnior"], regions: ["Brasil", "Europa", "Global"], workModes: ["Remoto"], limit: "20",
+    seniorities: ["Estágio", "Júnior"], regions: ["Brasil", "Global"], workModes: ["Remoto"], limit: "20",
   });
   const [open, setOpen] = useState(false);
 
@@ -37,7 +37,7 @@ export function SearchFilters({ onSearch, disabled = false }: SearchFiltersProps
           {["10", "20", "30", "50"].map((limit) => <label key={limit} className="flex items-center gap-2 text-sm"><RadioGroupItem value={limit} />{limit}</label>)}
         </RadioGroup>
       </fieldset>
-      <Button className="w-full" disabled={disabled} onClick={() => { onSearch(filters); setOpen(false); }}>Buscar vagas</Button>
+      <Button className="w-full" disabled={disabled} onClick={() => { onSearch(filters); setOpen(false); }}>{loading ? <><LoaderCircle className="animate-spin" aria-hidden="true" />Buscando vagas...</> : "Buscar vagas"}</Button>
     </div>
   );
 

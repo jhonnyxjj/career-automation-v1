@@ -13,7 +13,7 @@ import { CandidateProfileCard } from "@/components/resume/candidate-profile-card
 import { ProfileEditor } from "@/components/resume/profile-editor";
 import { ResumeUpload } from "@/components/resume/resume-upload";
 import { SearchFilters } from "@/components/search/search-filters";
-import { apiPath, readError, apiRequest, errorMessage } from "@/lib/api";
+import { apiRequest, errorMessage } from "@/lib/api";
 import type { CandidateProfile, JobListing, JobMatch, SearchFilters as FilterValues } from "@/lib/types";
 
 const seniorityMap: Record<string, string> = { "Estágio": "intern", "Júnior": "junior", "Pleno": "mid", "Sênior": "senior" };
@@ -25,6 +25,7 @@ export default function Home() {
   const [profileConfirmed, setProfileConfirmed] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [jobs, setJobs] = useState<JobMatch[]>([]);
+  const [needsReview, setNeedsReview] = useState<{ job: JobListing; reason: string }[]>([]);
   const [trackerVersion, setTrackerVersion] = useState(0);
   const [status, setStatus] = useState<"idle" | "restoring" | "uploading" | "searching">("restoring");
   const [error, setError] = useState("");
@@ -41,27 +42,27 @@ export default function Home() {
   }, []);
 
   async function selectResume(file: File) {
-    setStatus("uploading"); setError(""); setJobs([]);
+    setStatus("uploading"); setError(""); setJobs([]); setNeedsReview([]);
     const form = new FormData(); form.append("file", file);
-    const response = await fetch(apiPath("/profiles/upload"), { method: "POST", body: form });
-    if (!response.ok) { setError(await readError(response)); setStatus("idle"); return; }
-    const result = await response.json();
-    setProfile(result.profile); setProfileConfirmed(false); setEditingProfile(true); setNotice(result.warnings?.[0] ?? "Perfil identificado."); setStatus("idle");
+    try {
+      const result = await apiRequest<{ profile: CandidateProfile; warnings?: string[] }>("/profiles/upload", { method: "POST", body: form });
+      setProfile(result.profile); setProfileConfirmed(false); setEditingProfile(true); setNotice(result.warnings?.[0] ?? "Perfil identificado.");
+    } catch (error) { setError(errorMessage(error)); } finally { setStatus("idle"); }
   }
 
   async function search(filters: FilterValues) {
     if (!profile) return;
     setStatus("searching"); setError("");
-    const response = await fetch(apiPath("/jobs/search"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profile_id: profile.id, seniorities: filters.seniorities.map((value) => seniorityMap[value]), regions: filters.regions.map((value) => regionMap[value]), work_modes: filters.workModes.map((value) => workModeMap[value]), limit: Number(filters.limit) }) });
-    if (!response.ok) { setError(await readError(response)); setStatus("idle"); return; }
-    const result = await response.json();
-    const skills = new Set(profile.technical_skills.flatMap((group) => group.items));
-    setJobs(result.jobs.map((job: JobListing) => toJobMatch(job, skills)));
-    setTrackerVersion((version) => version + 1);
-    setStatus("idle");
+    try {
+      const result = await apiRequest<{ jobs: JobListing[]; needs_review: { job: JobListing; reason: string }[] }>("/jobs/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profile_id: profile.id, seniorities: filters.seniorities.map((value) => seniorityMap[value]), regions: filters.regions.map((value) => regionMap[value]), work_modes: filters.workModes.map((value) => workModeMap[value]), limit: Number(filters.limit) }) });
+      const skills = new Set(profile.technical_skills.flatMap((group) => group.items));
+      setJobs(result.jobs.map((job) => toJobMatch(job, skills)));
+      setNeedsReview(result.needs_review);
+      setTrackerVersion((version) => version + 1);
+    } catch (error) { setError(errorMessage(error)); } finally { setStatus("idle"); }
   }
 
-  return <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16"><header className="mb-10 max-w-2xl"><p className="text-sm font-medium text-muted-foreground">Job Matcher</p><h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Encontre vagas compatíveis com seu perfil</h1><p className="mt-3 text-muted-foreground">Envie seu currículo, selecione preferências e veja as vagas mais relevantes.</p></header><div className="grid gap-6 lg:grid-cols-[260px_1fr]"><aside><SearchFilters disabled={!profile || !profileConfirmed || editingProfile || status !== "idle"} onSearch={search} /></aside><div className="space-y-6">{!profile && status === "idle" && <ResumeUpload onSelect={selectResume} />}{status === "restoring" && <p>Restaurando perfil...</p>}{status === "uploading" && <Card><CardContent className="p-6 text-sm">Identificando perfil...</CardContent></Card>}{notice && <Alert><AlertTitle>Perfil pronto</AlertTitle><AlertDescription>{notice}</AlertDescription></Alert>}{error && <Alert variant="destructive" role="alert"><AlertTitle>Não foi possível concluir</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}{profile && <><CandidateProfileCard profile={profile} />{editingProfile ? <ProfileEditor key={profile.id} profile={profile} onCancel={() => setEditingProfile(false)} onSaved={(saved) => { setProfile(saved); setProfileConfirmed(true); setEditingProfile(false); setNotice("Perfil salvo e confirmado."); }} /> : <Button variant="outline" onClick={() => setEditingProfile(true)}>{profileConfirmed ? "Editar perfil" : "Revisar e confirmar perfil"}</Button>}<details><summary className="cursor-pointer text-sm">Trocar currículo</summary><ResumeUpload onSelect={selectResume} /></details></>}<Separator /><section aria-labelledby="results-title"><div className="flex items-center justify-between gap-4"><div><h2 id="results-title" className="text-xl font-semibold">Resultados</h2><p className="mt-1 text-sm text-muted-foreground">{status === "searching" ? "Buscando vagas nas fontes configuradas..." : `${jobs.length} vaga(s) encontrada(s).`}</p></div>{jobs.length > 0 && <Badge variant="secondary">{jobs.length}</Badge>}</div>{jobs.length > 0 ? <div className="mt-4 grid gap-4 md:grid-cols-2">{jobs.map((job) => <JobCard key={job.id} job={job} profileId={profile!.id} />)}</div> : <Card className="mt-4 shadow-none"><CardHeader><CardTitle className="text-base">{profile ? profileConfirmed ? "Escolha filtros e busque vagas" : "Confirme o perfil para buscar vagas" : "Envie seu currículo para começar"}</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">A busca consulta apenas as fontes configuradas e informa falhas por fonte.</CardContent></Card>}</section>{profile && profileConfirmed && <ApplicationTracker key={profile.id} profileId={profile.id} refreshKey={trackerVersion} />}</div></div></main>;
+  return <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16"><header className="mb-10 max-w-2xl"><p className="text-sm font-medium text-muted-foreground">Job Matcher</p><h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Encontre vagas compatíveis com seu perfil</h1><p className="mt-3 text-muted-foreground">Envie seu currículo, selecione preferências e veja as vagas mais relevantes.</p></header><div className="grid gap-6 lg:grid-cols-[260px_1fr]"><aside><SearchFilters disabled={!profile || !profileConfirmed || editingProfile || status !== "idle"} loading={status === "searching"} onSearch={search} /></aside><div className="space-y-6">{!profile && status === "idle" && <ResumeUpload onSelect={selectResume} />}{status === "restoring" && <p>Restaurando perfil...</p>}{status === "uploading" && <Card><CardContent className="p-6 text-sm">Identificando perfil...</CardContent></Card>}{notice && <Alert><AlertTitle>Perfil pronto</AlertTitle><AlertDescription>{notice}</AlertDescription></Alert>}{error && <Alert variant="destructive" role="alert"><AlertTitle>Não foi possível concluir</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}{profile && <><CandidateProfileCard profile={profile} />{editingProfile ? <ProfileEditor key={profile.id} profile={profile} onCancel={() => setEditingProfile(false)} onSaved={(saved) => { setProfile(saved); setProfileConfirmed(true); setEditingProfile(false); setNotice("Perfil salvo e confirmado."); }} /> : <Button variant="outline" onClick={() => setEditingProfile(true)}>{profileConfirmed ? "Editar perfil" : "Revisar e confirmar perfil"}</Button>}<details><summary className="cursor-pointer text-sm">Trocar currículo</summary><ResumeUpload onSelect={selectResume} /></details></>}<Separator /><section aria-labelledby="results-title"><div className="flex items-center justify-between gap-4"><div><h2 id="results-title" className="text-xl font-semibold">Resultados</h2><p className="mt-1 text-sm text-muted-foreground">{status === "searching" ? "Buscando vagas nas fontes configuradas..." : `${jobs.length} vaga(s) encontrada(s).`}</p></div>{jobs.length > 0 && <Badge variant="secondary">{jobs.length}</Badge>}</div>{jobs.length > 0 ? <div className="mt-4 grid gap-4 md:grid-cols-2">{jobs.map((job) => <JobCard key={job.id} job={job} profileId={profile!.id} />)}</div> : <Card className="mt-4 shadow-none"><CardHeader><CardTitle className="text-base">{profile ? profileConfirmed ? "Escolha filtros e busque vagas" : "Confirme o perfil para buscar vagas" : "Envie seu currículo para começar"}</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">A busca consulta apenas as fontes configuradas e informa falhas por fonte.</CardContent></Card>}</section>{needsReview.length > 0 && <section aria-labelledby="review-title"><h2 id="review-title" className="text-xl font-semibold">Vagas para avaliar</h2><p className="mt-1 text-sm text-muted-foreground">Há dados desconhecidos. Confira todos os requisitos antes de considerar estas vagas elegíveis.</p><div className="mt-4 space-y-3">{needsReview.map(({ job, reason }) => <Card key={`${job.source}:${job.external_id ?? job.url}`}><CardContent className="p-4"><p className="font-medium">{job.title} · {job.company}</p><p className="text-sm text-muted-foreground">{reason === "REGION_UNKNOWN" ? "Localização ou elegibilidade geográfica precisa de confirmação" : reason === "WORKPLACE_UNKNOWN" ? "Modalidade desconhecida" : "Área de atuação desconhecida"}</p><a className="text-sm underline" href={job.url} target="_blank" rel="noreferrer">Ver origem</a></CardContent></Card>)}</div></section>}{profile && profileConfirmed && <ApplicationTracker key={profile.id} profileId={profile.id} refreshKey={trackerVersion} />}</div></div></main>;
 }
 
 function toJobMatch(job: JobListing, skills: Set<string>): JobMatch {
