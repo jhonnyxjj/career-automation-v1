@@ -4,20 +4,24 @@ import asyncio
 import os
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .config import TECH_CATALOG
 from .finder import find_jobs
-from .models import CandidateProfile, GeneratedResume, JobListing, ResumeTemplateData, SearchProfile, SearchResult
+from .filters import hard_filter
+from .models import CandidateProfile, GeneratedResume, JobListing, RawJob, ResumeTemplateData, SearchProfile, SearchResult
+from .normalizer import normalize_job
+from .scorer import score_job
 from .profile_parser import parse_candidate_profile
 from .profile_api import router as profile_router
 from .tracker_api import router as tracker_router
-from .tracker import save_search
+from .tracker import save_job, save_search
 from .resume_storage import RESUMES_DIR, ResumeRepository
 from .sources import default_sources
 
@@ -50,6 +54,31 @@ class JobSearchRequest(BaseModel):
 class TailorResumeRequest(BaseModel):
     profile_id: str
     job: JobListing
+
+
+class ManualJobImportRequest(BaseModel):
+    profile_id: str
+    source: str = Field(min_length=1, max_length=80)
+    listing_type: str = Field(default="job", pattern="^(job|recruiter_post)$")
+    title: str = Field(min_length=1, max_length=200)
+    company: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=20_000)
+    source_url: str
+    apply_url: str | None = None
+    location: str | None = Field(default=None, max_length=200)
+    seniorities: set[str] = Field(default_factory=lambda: {"intern", "junior"})
+    regions: set[str] = Field(default_factory=lambda: {"brazil", "global"})
+    work_modes: set[str] = Field(default_factory=lambda: {"remote"})
+
+    @field_validator("source_url", "apply_url")
+    @classmethod
+    def require_http_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        parsed = urlparse(value)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise ValueError("URL deve ser HTTP(S) absoluta.")
+        return value
 
 
 class GeneratedResumeResponse(BaseModel):
@@ -109,13 +138,49 @@ async def search_jobs(request: JobSearchRequest) -> SearchResult:
         candidate = ResumeRepository().load_original(profile_id_or_404(request.profile_id))
     except FileNotFoundError as error:
         raise HTTPException(status_code=404, detail="Perfil não encontrado.") from error
+    profile = search_profile(candidate, request.seniorities, request.regions, request.work_modes)
+    result = await find_jobs(profile, default_sources(), request.limit)
+    await asyncio.to_thread(save_search, candidate.id, request.model_dump(mode="json"), result)
+    return result
+
+
+@app.post("/jobs/import", response_model=JobListing)
+def import_job(request: ManualJobImportRequest) -> JobListing:
+    try:
+        candidate = ResumeRepository().load_original(profile_id_or_404(request.profile_id))
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Perfil não encontrado.") from error
+
+    profile = search_profile(candidate, request.seniorities, request.regions, request.work_modes)
+    job = normalize_job(RawJob(
+        source=request.source,
+        listing_type=request.listing_type,
+        title=request.title,
+        company=request.company,
+        description=request.description,
+        location=request.location,
+        url=request.source_url,
+        apply_url=request.apply_url,
+    ))
+    result = hard_filter(job, profile)
+    scored = score_job(job, profile).model_copy(update={"filter_accepted": result.accepted, "filter_reason": result.reason})
+    save_job(candidate.id, scored)
+    return scored
+
+
+def search_profile(
+    candidate: CandidateProfile,
+    seniorities: set[str],
+    regions: set[str],
+    work_modes: set[str],
+) -> SearchProfile:
     technologies = {item for group in candidate.technical_skills for item in group.items}
     categories = {technology: TECH_CATALOG[technology][0] for technology in technologies if technology in TECH_CATALOG}
-    profile = SearchProfile(
+    return SearchProfile(
         name=candidate.personal.name,
-        allowed_seniorities=request.seniorities,
-        allowed_workplaces=request.work_modes,
-        allowed_regions=request.regions,
+        allowed_seniorities=seniorities,
+        allowed_workplaces=work_modes,
+        allowed_regions=regions,
         role_areas={"backend", "fullstack", "frontend"},
         desired_technologies=technologies,
         primary_languages={technology for technology, category in categories.items() if category == "language"},
@@ -123,9 +188,6 @@ async def search_jobs(request: JobSearchRequest) -> SearchResult:
         databases={technology for technology, category in categories.items() if category == "database"},
         cloud_devops={technology for technology, category in categories.items() if category == "cloud_devops"},
     )
-    result = await find_jobs(profile, default_sources(), request.limit)
-    await asyncio.to_thread(save_search, candidate.id, request.model_dump(mode="json"), result)
-    return result
 
 
 @app.post("/resumes/tailor", response_model=GeneratedResumeResponse)

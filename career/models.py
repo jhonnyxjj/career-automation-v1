@@ -16,6 +16,7 @@ class SourceStatus(StrEnum):
 
 class RawJob(BaseModel):
     source: str
+    listing_type: str = "job"
     title: str
     company: str
     url: str
@@ -31,6 +32,7 @@ class RawJob(BaseModel):
 
 class JobListing(BaseModel):
     source: str
+    listing_type: str = "job"
     title: str
     company: str
     url: str
@@ -43,6 +45,8 @@ class JobListing(BaseModel):
     published_at: datetime | None = None
     technologies: list[str] = Field(default_factory=list)
     score: int = Field(default=0, ge=0, le=100)
+    filter_accepted: bool | None = None
+    filter_reason: str | None = None
     expired: bool = False
 
     @field_validator("url", "apply_url")

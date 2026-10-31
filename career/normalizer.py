@@ -70,6 +70,7 @@ def normalize_job(raw: RawJob) -> JobListing:
     combined_text = " ".join(part for part in (title, description, raw.seniority) if part)
     return JobListing(
         source=display_text(raw.source) or raw.source,
+        listing_type=raw.listing_type,
         external_id=display_text(raw.external_id),
         title=title,
         company=company,

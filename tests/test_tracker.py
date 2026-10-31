@@ -78,3 +78,33 @@ def test_search_endpoint_records_filters_and_result(client, monkeypatch):
     stored = tracker.load_tracker(profile_id)
     assert stored["searches"][0]["filters"]["regions"] == ["brazil"]
     assert stored["jobs"][0]["job"]["score"] == 75
+
+
+@pytest.mark.parametrize('source', ['LinkedIn', 'Indeed', 'Gupy', 'Vagas.com.br', 'ProgramaThor', 'InfoJobs'])
+def test_manual_import_is_available_in_tracker(client, source):
+    from career.api import app
+    _, profile_id = client
+    response = TestClient(app).post('/jobs/import', json={
+        'profile_id': profile_id, 'source': source, 'title': 'Backend Developer Junior',
+        'company': 'Empresa', 'description': 'Backend Node.js remoto',
+        'source_url': 'https://example.com/indeed/1', 'location': 'Brazil',
+    })
+    assert response.status_code == 200
+    stored = tracker.load_tracker(profile_id)
+    assert len(stored['jobs']) == 1
+    assert stored['jobs'][0]['job']['source'] == source
+    assert stored['jobs'][0]['job']['filter_accepted'] is True
+
+
+def test_manual_import_reports_hybrid_as_not_allowed(client):
+    from career.api import app
+    _, profile_id = client
+    response = TestClient(app).post('/jobs/import', json={
+        'profile_id': profile_id, 'source': 'Indeed', 'title': 'Backend Developer Junior',
+        'company': 'Empresa', 'description': 'Backend híbrido Node.js',
+        'source_url': 'https://example.com/hybrid', 'location': 'Brazil',
+        'work_modes': ['remote'],
+    })
+    assert response.status_code == 200
+    assert response.json()['filter_accepted'] is False
+    assert response.json()['filter_reason'] == 'WORKPLACE_NOT_ALLOWED'
