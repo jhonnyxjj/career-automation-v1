@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from .models import CandidateProfile, JobListing, ResumeTemplateData
 from .normalizer import normalized_text
 
@@ -10,9 +12,13 @@ class ResumeTailoringService:
     def tailor(self, candidate: CandidateProfile, job: JobListing) -> ResumeTemplateData:
         job_terms = {normalized_text(technology) for technology in job.technologies}
         job_text = normalized_text(f"{job.title} {job.description or ''}")
+        def matches_skill(item: str) -> bool:
+            skill = normalized_text(item)
+            return bool(skill) and (skill in job_terms or bool(re.search(rf"(?<!\w){re.escape(skill)}(?!\w)", job_text)))
+
         skills = sorted(
-            candidate.technical_skills,
-            key=lambda group: sum(normalized_text(item) in job_text or normalized_text(item) in job_terms for item in group.items),
+            [group.model_copy(update={"items": sorted(group.items, key=matches_skill, reverse=True)}) for group in candidate.technical_skills],
+            key=lambda group: sum(matches_skill(item) for item in group.items),
             reverse=True,
         )
         return ResumeTemplateData(
