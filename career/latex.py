@@ -111,7 +111,7 @@ class LaTeXRenderer:
     def _project(self, item: object) -> str:
         heading = self._entry_heading(item.name, item.context)
         technologies = r" \textbullet\ ".join(escape_latex(value) for value in item.technologies)
-        subheading = self._entry_sub(technologies, "") if technologies else ""
+        subheading = rf"\entrysub{{{technologies}}}{{}}" if technologies else ""
         return "\n".join(part for part in (heading, subheading, self._bullets(item.bullets)) if part)
 
     def _education(self, item: object) -> str:
