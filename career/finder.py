@@ -47,7 +47,7 @@ async def find_jobs(profile: SearchProfile, sources: list[BaseSource], limit: in
         result = hard_filter(job, profile)
         if result.accepted:
             compatible.append(job)
-        elif result.reason in {"ROLE_AREA_UNKNOWN", "WORKPLACE_UNKNOWN", "REGION_UNKNOWN"}:
+        elif result.reason in {"ROLE_AREA_UNKNOWN", "WORKPLACE_UNKNOWN", "REGION_UNKNOWN", "MID_STACK_UNKNOWN"}:
             needs_review.append(ReviewJob(job=job, reason=result.reason))
     scored = [score_job(job, profile) for job in compatible]
     eligible = [job for job in scored if job.score >= profile.minimum_score]

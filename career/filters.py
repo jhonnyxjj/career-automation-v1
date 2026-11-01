@@ -38,6 +38,9 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
             return FilterResult(accepted=False, reason="REGION_NOT_ALLOWED")
         if _has_geographic_restriction(job.description):
             return FilterResult(accepted=False, reason="REGION_UNKNOWN")
+    if job.seniority == "mid" and not {"JavaScript", "TypeScript"}.intersection(job.technologies):
+        reason = "MID_STACK_NOT_ALLOWED" if {"Java", "C#"}.intersection(job.technologies) else "MID_STACK_UNKNOWN"
+        return FilterResult(accepted=False, reason=reason)
     if profile.recency_days is not None and job.published_at:
         reference = now or datetime.now(UTC)
         published = job.published_at if job.published_at.tzinfo else job.published_at.replace(tzinfo=UTC)

@@ -20,6 +20,8 @@ const filterReasons: Record<string, string> = {
   ROLE_AREA_NOT_ALLOWED: "área de atuação não selecionada",
   SENIORITY_NOT_ALLOWED: "senioridade fora das opções escolhidas",
   INCOMPATIBLE_STACK: "tecnologias não correspondem ao perfil",
+  MID_STACK_NOT_ALLOWED: "vaga plena fora das stacks JavaScript/TypeScript",
+  MID_STACK_UNKNOWN: "stack da vaga plena não confirmada",
   NOT_DEVELOPMENT: "cargo não identificado como desenvolvimento",
 };
 
