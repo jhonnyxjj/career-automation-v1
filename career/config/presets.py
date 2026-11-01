@@ -16,7 +16,7 @@ class ProfilePreset:
 
 TECH_CATALOG: dict[str, tuple[str, tuple[str, ...]]] = {
     "TypeScript": ("language", ("typescript", "type script")),
-    "JavaScript": ("language", ("javascript", "java script", "node.js", "nodejs", "node")),
+    "JavaScript": ("language", ("javascript", "java script")),
     "C#": ("language", ("c#", "csharp", "c-sharp")),
     "Java": ("language", ("java",)),
     ".NET": ("framework", (".net", "dotnet", "asp.net", "aspnet")),
