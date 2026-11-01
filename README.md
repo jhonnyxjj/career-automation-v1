@@ -44,13 +44,27 @@ Opcionalmente, crie `.data/settings.json`:
 }
 ```
 
+## Fontes de vagas
+
+Greenhouse, Lever, PrimeiraVagaTech e Remotinho são consultados por suas fontes públicas.
+Para LinkedIn (incluindo posts de recrutadores), Indeed, Gupy, ProgramaThor, Sólides Vagas,
+Vagas.com.br, InfoJobs, Glassdoor e outras fontes sem integração autorizada, use **Importar vaga ou post**: cole a
+descrição, a URL da origem e, se existir, a URL de candidatura. A aplicação não acessa contas,
+não automatiza navegadores e não envia candidaturas em seu nome.
+
+Para arquitetura, backup, privacidade e limitações, consulte [operação](docs/operacao.md).
+
 ## Publicação
 
 Esta versão é local e não inclui autenticação. Não a exponha publicamente ainda: antes de publicar, adicione autenticação, armazenamento privado persistente e variáveis de ambiente de produção.
 
 ## Comandos de verificação
 
-- Lint web: `cd web; npm.cmd run lint`
-- Build web: `cd web; npm.cmd run build`
+- Lint web: `cd web; bun run lint`
+- Typecheck web: `cd web; bunx tsc --noEmit`
+- Build web: `cd web; bun run build`
+- Testes web: `cd web; bun test`
 - Testes API/domínio: `uv run pytest`
+- Verificação de sintaxe Python: `python -m compileall -q career`
+- Lint e typecheck Python: não configurados
 - Compose: `docker compose config`
