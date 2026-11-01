@@ -1,0 +1,29 @@
+# Separate project and volume: never run these tests against personal data.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      CAREER_ALLOWED_ORIGINS: http://localhost:13000
+    ports:
+      - '127.0.0.1:18000:8000'
+    volumes:
+      - test-data:/app/.data
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:18000
+    ports:
+      - '127.0.0.1:13000:3000'
+    depends_on:
+      api:
+        condition: service_healthy
+volumes:
+  test-data:

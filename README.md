@@ -69,3 +69,4 @@ Esta versão é local e não inclui autenticação. Não a exponha publicamente 
 - Lint Python (erros críticos; requer Ruff 0.17.3): `ruff check --select E9,F63,F7,F82 career tests`
 - Typecheck Python: não configurado
 - Compose: `docker compose config`
+- E2E de navegador: veja [operação](docs/operacao.md#testes-de-navegador)

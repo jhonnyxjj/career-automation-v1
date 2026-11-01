@@ -27,6 +27,22 @@ O Compose publica as portas apenas em `127.0.0.1`. Não compartilhe `.data/`, cu
 - Se uma fonte falhar, consulte o relatório; as demais podem retornar resultados independentemente.
 - Se a API não estiver acessível, confira `http://localhost:8000/health` e reinicie o Compose.
 
+## Testes de navegador
+
+Os testes usam dados fictícios e um Compose separado. Não aponte os testes para a instalação com dados pessoais. Com Docker, Bun e as portas 13000 e 18000 livres:
+
+```sh
+docker compose -p career-v11-e2e -f compose.e2e.yaml up -d --build
+cd web
+bun install --frozen-lockfile
+bunx playwright install chromium
+bunx playwright test
+cd ..
+docker compose -p career-v11-e2e -f compose.e2e.yaml down
+```
+
+O volume de teste é separado de `.data/` e permanece após `down`. O teste de navegador cobre upload, confirmação e restauração, importação, acompanhamento, geração e downloads, além de falhas de PDF e rede. Os testes de API cobrem falhas de fontes, timeouts e indisponibilidade de LaTeX.
+
 ## Limitações conhecidas
 
-A ordenação prioriza estágio e júnior, depois o score e, em caso de empate, datas mais recentes. O score não aplica penalidade específica a anos de experiência. Para vagas brasileiras presenciais ou híbridas, Rio de Janeiro e Petrópolis são reconhecidas; outras cidades não são configuráveis, e uma localização indicada apenas como Brasil é encaminhada para revisão. Vagas plenas sem linguagem explícita são encaminhadas para revisão. A seleção de origem e a importação são manuais, sem ingestão automática de alertas. A suíte de integração de API não substitui testes E2E automatizados em navegador. O build da API instala dependências conforme `pyproject.toml` sem aplicar `uv.lock`; versões podem mudar em novos builds.
+A ordenação prioriza estágio e júnior, depois o score e, em caso de empate, datas mais recentes. O score não aplica penalidade específica a anos de experiência. Para vagas brasileiras presenciais ou híbridas, Rio de Janeiro e Petrópolis são reconhecidas; outras cidades não são configuráveis, e uma localização indicada apenas como Brasil é encaminhada para revisão. Vagas plenas sem linguagem explícita são encaminhadas para revisão. A seleção de origem e a importação são manuais, sem ingestão automática de alertas. Os testes de navegador não cobrem todas as combinações de fontes ou modalidades e não reiniciam o container automaticamente. O build da API instala dependências conforme `pyproject.toml` sem aplicar `uv.lock`; versões podem mudar em novos builds.

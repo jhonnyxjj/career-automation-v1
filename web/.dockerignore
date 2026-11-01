@@ -11,3 +11,7 @@ coverage
 .data
 .venv
 *.pem
+
+e2e
+test-results
+playwright-report
