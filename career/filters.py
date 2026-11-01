@@ -20,6 +20,10 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
         return FilterResult(accepted=False, reason="SENIORITY_NOT_ALLOWED")
     if any(term in title for term in NON_DEVELOPMENT_TITLE_TERMS) or not any(term in text for term in DEVELOPMENT_TERMS):
         return FilterResult(accepted=False, reason="NOT_DEVELOPMENT")
+    if (profile.role_areas and "frontend" not in profile.role_areas
+            and re.search(r"\bfront[ -]?end\b", title)
+            and not re.search(r"\b(?:back[ -]?end|full[ -]?stack)\b", title)):
+        return FilterResult(accepted=False, reason="ROLE_AREA_NOT_ALLOWED")
     if profile.role_areas and not _matches_role_area(text, profile.role_areas):
         reason = "ROLE_AREA_NOT_ALLOWED" if _matches_role_area(text, {"backend", "frontend", "fullstack"}) else "ROLE_AREA_UNKNOWN"
         return FilterResult(accepted=False, reason=reason)
