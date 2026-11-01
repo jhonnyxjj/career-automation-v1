@@ -61,7 +61,7 @@ Esta versão é local e não inclui autenticação. Não a exponha publicamente 
 ## Comandos de verificação
 
 - Lint web: `cd web; bun run lint`
-- Typecheck web: `cd web; bunx tsc --noEmit`
+- Typecheck web: `cd web; bunx next typegen; bunx tsc --noEmit`
 - Build web: `cd web; bun run build`
 - Testes web: `cd web; bun test`
 - Testes API/domínio: `uv run pytest`
