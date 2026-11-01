@@ -2,9 +2,10 @@ FROM python:3.14-slim
 
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-lang-portuguese && rm -rf /var/lib/apt/lists/*
-COPY pyproject.toml README.md ./
+COPY pyproject.toml uv.lock README.md ./
 COPY career ./career
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir uv==0.13.6 && uv sync --locked --no-dev --no-editable --no-cache
+ENV PATH="/app/.venv/bin:$PATH"
 RUN useradd --create-home appuser && mkdir -p /app/.data && chown -R appuser:appuser /app
 USER appuser
 EXPOSE 8000
