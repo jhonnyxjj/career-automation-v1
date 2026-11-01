@@ -26,3 +26,21 @@ def test_equally_scored_jobs_prioritize_recent_dates_and_keep_unknowns():
 
     result = asyncio.run(find_jobs(javascript_profile(), [Source()], 20))
     assert [job.company for job in result.jobs] == ['New', 'Old', 'Unknown']
+
+
+def test_junior_opportunities_rank_before_mid_level():
+    class Source(BaseSource):
+        name = 'Test'
+
+        async def fetch(self, client):
+            jobs = [
+                RawJob(source=self.name, title='Backend Developer Junior', company='Junior',
+                       url='https://example.com/junior', description='Backend remote'),
+                RawJob(source=self.name, title='Backend Developer Pleno', company='Pleno',
+                       url='https://example.com/mid', description='Backend remote TypeScript Node.js PostgreSQL Docker Prisma'),
+            ]
+            return FetchResult(report=SourceReport(source=self.name, status=SourceStatus.OK, count=2), jobs=jobs)
+
+    result = asyncio.run(find_jobs(javascript_profile(), [Source()], 20))
+    assert [job.company for job in result.jobs] == ['Junior', 'Pleno']
+    assert result.jobs[0].score < result.jobs[1].score

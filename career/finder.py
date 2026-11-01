@@ -56,7 +56,8 @@ async def find_jobs(profile: SearchProfile, sources: list[BaseSource], limit: in
         published = job.published_at
         if published is not None and published.tzinfo is None:
             published = published.replace(tzinfo=UTC)
-        return (-job.score, published is None, -published.timestamp() if published else 0, job.title.casefold())
+        priority = 0 if job.seniority in {"intern", "junior"} else 2 if job.seniority == "mid" else 1
+        return (priority, -job.score, published is None, -published.timestamp() if published else 0, job.title.casefold())
 
     ranked = sorted(eligible, key=rank_key)[:limit]
 
