@@ -1,0 +1,19 @@
+# Auditoria do backlog V1.1
+
+Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local `59816a1`. Fonte: [especificação](https://app.notion.com/p/40a27698d6818190bb0dc7eec7c7d489) e [quadro](https://app.notion.com/p/5cefab2cb8044bf2be9474a0baea3fff). As seis tarefas estavam em Backlog quando consultadas. Os estados abaixo são avaliações locais, não alterações automáticas do Notion.
+
+| Fase | Evidências | Pontos de aceite ainda pendentes ou insuficientemente verificados |
+| --- | --- | --- |
+| [P0](https://app.notion.com/p/40a27698d68181d5a598e74cc0372402) | Árvore e histórico inspecionados; Bun com lockfile, Docker e exclusões presentes. Backend e builds foram executados sem apagar alterações preexistentes. | O build Python instala dependências sem usar `uv.lock`; a reprodução integral em ambiente limpo ainda precisa ser comprovada. |
+| [P1](https://app.notion.com/p/40a27698d681815aa949f26a5649e7e3) | Filtros de modalidade/região, score versionado, tratamento de desconhecidos e timeout existem; testes de filtros e rede passaram. URLs manuais são armazenadas, não requisitadas pela API. Portas ficam em loopback. | Falhas e combinações de rede/filtros não foram exaustivamente verificadas no navegador; localidades ambíguas e preferências precisam de revisão. |
+| [P2](https://app.notion.com/p/40a27698d68181c3b3f8e003c3db74f0) | Editor, confirmação, restauração, originais preservados e fallback `.tex` implementados; testes de parser, persistência e LaTeX passaram; fluxo sintético passou em navegador. | Extração é heurística: experiências e formação estruturadas exigem formato específico e cidade/UF e portfólio não são extraídos. Validar PDFs variados e falha real de compilação na interface. |
+| [P3](https://app.notion.com/p/40a27698d681815b8195d3ff9ae09bbc) | Seis origens aceitam importação manual pelo mesmo pipeline; testes parametrizados, deduplicação e falha parcial de fonte passaram. Greenhouse, Lever e fontes complementares existem. | Fixtures usam conteúdo sintético comum, não exemplos representativos por portal; respostas 429 e limites/retries não estão demonstrados. Integração automática de alertas não existe. |
+| [P4](https://app.notion.com/p/40a27698d68181a7a647f34a3eb9a5df) | Perfis, vagas, buscas e funil persistidos em arquivos; testes de escrita/idempotência e E2E de refresh passaram. Reinício foi testado manualmente em volume sintético. | Backup manual está documentado, mas recuperação de backup em instalação limpa ainda não foi demonstrada; não há exportação na interface. |
+| [P5](https://app.notion.com/p/40a27698d6818179b116c6a309813cfd) | CI, testes backend/frontend/E2E, Docker e documentação existem. Nesta auditoria: 84 testes Python, lint Python focado, lint/typecheck e cinco testes web passaram. | A [CI publicada](https://github.com/jhonnyxjj/career-automation-v1/actions/runs/41320842396) falhou no typecheck frontend; backend, Compose e E2E passaram. A correção `59816a1` passou em cópia limpa local, mas ainda não executou no GitHub. Typecheck Python e alguns cenários reais de falha E2E seguem pendentes. |
+
+## Rastreabilidade e prioridade
+
+1. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes. Não fazer push sem pedido explícito.
+2. A correção de CI deve ser verificada remotamente após publicação autorizada; antes disso, não registrar P5 como concluída.
+3. Resolver as lacunas de perfil, filtros e persistência na ordem de dependências do plano; validar cada entrega isoladamente. O score ainda não penaliza requisitos de 2–3 anos e a localização presencial não oferece preferências de cidade configuráveis.
+4. Atualizar o status de uma tarefa no Notion somente após comprovar todos os critérios pertinentes. Nenhuma fase foi alterada nesta auditoria: a tabela identifica trabalho já implementado e as lacunas, não um aceite completo.
