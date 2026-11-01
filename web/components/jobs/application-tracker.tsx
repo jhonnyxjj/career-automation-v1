@@ -10,7 +10,7 @@ type Entry = { id: string; job: JobListing; status: Status; notes: string; favor
 type Search = { id: string; created_at: string; filters: { regions?: string[]; work_modes?: string[] }; job_ids: string[] };
 const statuses: [Status, string][] = [["discovered", "Encontrada"], ["saved", "Salva"], ["applied", "Candidatura enviada manualmente"], ["interview", "Entrevista"], ["offer", "Proposta"], ["closed", "Encerrada"]];
 
-export function ApplicationTracker({ profileId, refreshKey }: { profileId: string; refreshKey: number }) {
+export function ApplicationTracker({ profileId, refreshKey, onView }: { profileId: string; refreshKey: number; onView: (job: JobListing) => void }) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [searches, setSearches] = useState<Search[]>([]);
   const [error, setError] = useState("");
@@ -47,6 +47,7 @@ export function ApplicationTracker({ profileId, refreshKey }: { profileId: strin
       <p className="font-medium">{entry.job.title} · {entry.job.company}</p>
       <p className="text-sm text-muted-foreground">{entry.job.source} · {entry.job.filter_accepted === false ? "Requer avaliação" : `Compatibilidade ${entry.job.score}%`}</p>
       <a href={entry.job.url} target="_blank" rel="noreferrer" className="text-sm underline">Ver origem</a>
+      <Button type="button" variant="outline" onClick={() => onView(entry.job)}>Ver vaga e adaptar currículo</Button>
       <label className="block text-sm">Situação<select className="ml-2 rounded-md border bg-background p-1" value={entry.status} onChange={(event) => change(entry.id, { status: event.target.value as Status })}>{statuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       <label className="block text-sm"><input type="checkbox" checked={entry.favorite} onChange={(event) => change(entry.id, { favorite: event.target.checked })} /> Favorita</label>
       <label className="block text-sm">Observações<textarea className="mt-1 w-full rounded-md border bg-background p-2" value={entry.notes} onChange={(event) => change(entry.id, { notes: event.target.value })} /></label>
