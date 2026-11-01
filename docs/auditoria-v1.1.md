@@ -25,3 +25,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - **CI:** `59816a1` gera tipos do Next.js antes do typecheck. A falha foi reproduzida em cópia limpa e o comando corrigido passou nessa cópia. A execução remota falhou antes da correção; a nova versão ainda não foi publicada nem verificada no GitHub.
 - **P1:** `8fb89c0` corrige a aceitação de Niterói como cidade do Rio em vagas presenciais/híbridas. O teste falhou antes e a suíte com dependências travadas passou depois: 93 testes. Continuam pendentes a revisão de localidades ambíguas e a validação completa dos critérios de P1.
 - **Próxima ação:** continuar P1 pelos critérios do Notion e validar os demais casos sem ler ou alterar dados pessoais; após P1, seguir P2 e P4 conforme dependências. P1–P5 permanecem em Backlog no Notion até a comprovação dos respectivos aceites.
+
+### Incremento posterior de P1
+
+- `1e9e1c5` introduz a versão 2 do score, com penalidade de até cinco pontos para menções reconhecidas de 2–3 anos de experiência. Os pontos são explicados na interface; frases negadas e intervalos fora do escopo não recebem essa penalidade nos testes. A detecção é heurística e não cobre todas as redações.
+- Verificações: 105 testes Python com dependências travadas, Ruff focado, lint/typecheck e cinco testes frontend; dois E2E passaram, incluindo a explicação da penalidade. O E2E foi construído antes do último refinamento do reconhecimento de negação; esse refinamento foi coberto pela suíte Python posterior.
+- P1 permanece em Backlog até revisar os casos ambíguos de região e validar integralmente os demais critérios. A próxima tarefa é continuar essa revisão e então avançar ao parser de P2. A CI ainda precisa ser observada remotamente após publicação autorizada.
