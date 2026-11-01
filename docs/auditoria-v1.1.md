@@ -16,4 +16,12 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 1. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes. Não fazer push sem pedido explícito.
 2. A correção de CI deve ser verificada remotamente após publicação autorizada; antes disso, não registrar P5 como concluída.
 3. Resolver as lacunas de perfil, filtros e persistência na ordem de dependências do plano; validar cada entrega isoladamente. O score ainda não penaliza requisitos de 2–3 anos e a localização presencial não oferece preferências de cidade configuráveis.
-4. Atualizar o status de uma tarefa no Notion somente após comprovar todos os critérios pertinentes. Nenhuma fase foi alterada nesta auditoria: a tabela identifica trabalho já implementado e as lacunas, não um aceite completo.
+4. Atualizar o status de uma tarefa no Notion somente após comprovar todos os critérios pertinentes. Na auditoria inicial nenhuma fase havia sido alterada: a tabela registra o estado observado naquele momento.
+
+## Continuação — 2026-11-01
+
+- **P0 concluída no Notion:** status confirmado por releitura após verificar preservação da árvore, 84 testes Python, frontend e builds; o E2E passou novamente com a imagem Python do lockfile. O commit `0a63f8a` aplica `uv.lock` à imagem e à CI. Imagem base e pacotes do sistema ainda não têm fixação por digest/versão; isso limita a reprodutibilidade bit a bit.
+- **Regras permanentes:** `73ad749` adicionou `AGENTS.md` na raiz, preservando as instruções específicas do frontend.
+- **CI:** `59816a1` gera tipos do Next.js antes do typecheck. A falha foi reproduzida em cópia limpa e o comando corrigido passou nessa cópia. A execução remota falhou antes da correção; a nova versão ainda não foi publicada nem verificada no GitHub.
+- **P1:** `8fb89c0` corrige a aceitação de Niterói como cidade do Rio em vagas presenciais/híbridas. O teste falhou antes e a suíte com dependências travadas passou depois: 93 testes. Continuam pendentes a revisão de localidades ambíguas e a validação completa dos critérios de P1.
+- **Próxima ação:** continuar P1 pelos critérios do Notion e validar os demais casos sem ler ou alterar dados pessoais; após P1, seguir P2 e P4 conforme dependências. P1–P5 permanecem em Backlog no Notion até a comprovação dos respectivos aceites.
