@@ -10,6 +10,7 @@ class ScoreWeights:
     database: int = 10
     cloud_devops: int = 5
     workplace: int = 10
+    experience_penalty: int = 5
 
 
 SCORE_WEIGHTS = ScoreWeights()

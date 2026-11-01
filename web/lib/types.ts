@@ -23,7 +23,7 @@ export type JobListing = {
   technologies: string[];
   score: number;
   score_version?: string | null;
-  score_breakdown?: { label: string; points: number; status: "match" | "not_identified" | "unknown" }[];
+  score_breakdown?: { label: string; points: number; status: "match" | "penalty" | "not_identified" | "unknown" }[];
   filter_accepted?: boolean | null;
   filter_reason?: string | null;
 };

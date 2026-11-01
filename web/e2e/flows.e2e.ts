@@ -16,10 +16,13 @@ test("profile, import, application and tailored resume survive a refresh", async
   await page.getByRole("button", { name: "Importar vaga ou post" }).click();
   await page.getByLabel("Cargo").fill("Backend Developer Junior");
   await page.getByLabel("Empresa").fill("Empresa Fictícia E2E");
-  await page.getByLabel("Descrição da vaga").fill("Backend junior remoto no Brasil com TypeScript e Node.js");
+  await page.getByLabel("Descrição da vaga").fill("Backend junior remoto no Brasil com TypeScript e Node.js. Requer 2 anos de experiência.");
   await page.getByLabel("URL da origem").fill(`https://example.com/e2e/${Date.now()}`);
   await page.getByLabel("Localização (opcional)").fill("Brasil");
   await page.getByRole("button", { name: "Analisar vaga" }).click();
+  await page.getByRole("button", { name: "Detalhes", exact: true }).click();
+  await expect(page.getByText("Menção de 2–3 anos de experiência: -5 pontos")).toBeVisible();
+  await page.getByRole("button", { name: "Close" }).click();
   const tracker = page.getByRole("region", { name: "Acompanhamento de vagas" });
   await expect(tracker.getByText("Empresa Fictícia E2E", { exact: false })).toBeVisible();
   await tracker.getByLabel("Situação").selectOption("applied");
