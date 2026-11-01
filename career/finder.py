@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC
 
 import httpx
 from pydantic import ValidationError
@@ -51,7 +52,13 @@ async def find_jobs(profile: SearchProfile, sources: list[BaseSource], limit: in
     scored = [score_job(job, profile) for job in compatible]
     eligible = [job for job in scored if job.score >= profile.minimum_score]
 
-    ranked = sorted(eligible, key=lambda job: (-job.score, job.published_at is None, job.title.casefold()))[:limit]
+    def rank_key(job):
+        published = job.published_at
+        if published is not None and published.tzinfo is None:
+            published = published.replace(tzinfo=UTC)
+        return (-job.score, published is None, -published.timestamp() if published else 0, job.title.casefold())
+
+    ranked = sorted(eligible, key=rank_key)[:limit]
 
     return SearchResult(
         jobs=ranked,
