@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import type { SearchFilters as FilterValues } from "@/lib/types";
 
-const seniorities = ["Estágio", "Júnior", "Pleno", "Sênior"];
+const seniorities = ["Estágio", "Júnior", "Pleno"];
 const regions = ["Brasil", "Estados Unidos", "Canadá", "Europa", "Reino Unido", "América Latina", "Global"];
 const workModes = ["Remoto", "Híbrido", "Presencial"];
 

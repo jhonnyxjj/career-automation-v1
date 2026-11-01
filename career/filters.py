@@ -14,7 +14,7 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
 
     if job.expired:
         return FilterResult(accepted=False, reason="EXPIRED")
-    if any(term in title for term in SENIOR_TITLE_TERMS) and "senior" not in profile.allowed_seniorities:
+    if job.seniority == "senior" or any(term in title for term in SENIOR_TITLE_TERMS):
         return FilterResult(accepted=False, reason="SENIORITY_NOT_ALLOWED")
     if job.seniority and job.seniority not in profile.allowed_seniorities:
         return FilterResult(accepted=False, reason="SENIORITY_NOT_ALLOWED")

@@ -28,3 +28,10 @@ def test_unknown_mid_stack_is_returned_for_review():
     result = asyncio.run(find_jobs(javascript_profile(), [Source()], 20))
     assert not result.jobs
     assert result.needs_review[0].reason == 'MID_STACK_UNKNOWN'
+
+
+def test_senior_is_excluded_even_if_requested():
+    profile = javascript_profile(allowed_seniorities={'senior'})
+    job = JobListing(source='Teste', title='Senior Backend Developer', company='Empresa',
+                     url='https://example.com', workplace_type='remote', seniority='senior')
+    assert hard_filter(job, profile).reason == 'SENIORITY_NOT_ALLOWED'
