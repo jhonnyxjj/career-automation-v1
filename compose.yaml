@@ -6,7 +6,7 @@ services:
     environment:
       CAREER_ALLOWED_ORIGINS: http://localhost:3000
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./.data:/app/.data
     healthcheck:
@@ -23,4 +23,4 @@ services:
       api:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
