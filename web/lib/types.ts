@@ -22,6 +22,8 @@ export type JobListing = {
   apply_url?: string | null;
   technologies: string[];
   score: number;
+  score_version?: string | null;
+  score_breakdown?: { label: string; points: number; status: "match" | "not_identified" | "unknown" }[];
   filter_accepted?: boolean | null;
   filter_reason?: string | null;
 };

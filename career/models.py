@@ -30,6 +30,12 @@ class RawJob(BaseModel):
     expired: bool = False
 
 
+class ScoreComponent(BaseModel):
+    label: str
+    points: int
+    status: str
+
+
 class JobListing(BaseModel):
     source: str
     listing_type: str = "job"
@@ -45,6 +51,8 @@ class JobListing(BaseModel):
     published_at: datetime | None = None
     technologies: list[str] = Field(default_factory=list)
     score: int = Field(default=0, ge=0, le=100)
+    score_version: str | None = None
+    score_breakdown: list[ScoreComponent] = Field(default_factory=list)
     filter_accepted: bool | None = None
     filter_reason: str | None = None
     expired: bool = False
