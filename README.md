@@ -66,5 +66,6 @@ Esta versão é local e não inclui autenticação. Não a exponha publicamente 
 - Testes web: `cd web; bun test`
 - Testes API/domínio: `uv run pytest`
 - Verificação de sintaxe Python: `python -m compileall -q career`
-- Lint e typecheck Python: não configurados
+- Lint Python (erros críticos; requer Ruff 0.17.3): `ruff check --select E9,F63,F7,F82 career tests`
+- Typecheck Python: não configurado
 - Compose: `docker compose config`
