@@ -46,7 +46,7 @@ class ProfileUploadResponse(BaseModel):
 class JobSearchRequest(BaseModel):
     profile_id: str
     seniorities: set[str] = Field(default_factory=lambda: {"intern", "junior"})
-    regions: set[str] = Field(default_factory=lambda: {"brazil", "europe", "global"})
+    regions: set[str] = Field(default_factory=lambda: {"brazil", "global"})
     work_modes: set[str] = Field(default_factory=lambda: {"remote"})
     limit: int = Field(default=20, ge=1, le=50)
 
