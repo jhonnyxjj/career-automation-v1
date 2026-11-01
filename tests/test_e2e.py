@@ -1,0 +1,70 @@
+from io import BytesIO
+import shutil
+
+import httpx
+from fastapi.testclient import TestClient
+from pypdf import PdfWriter
+from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
+
+from career import api, profile_store, tracker
+from career.models import FetchResult, RawJob, SourceReport, SourceStatus
+from career.sources.base import BaseSource
+
+
+def _synthetic_pdf() -> bytes:
+    writer = PdfWriter()
+    page = writer.add_blank_page(width=612, height=792)
+    font = writer._add_object(DictionaryObject({NameObject('/Type'): NameObject('/Font'), NameObject('/Subtype'): NameObject('/Type1'), NameObject('/BaseFont'): NameObject('/Helvetica')}))
+    page[NameObject('/Resources')] = DictionaryObject({NameObject('/Font'): DictionaryObject({NameObject('/F1'): font})})
+    stream = DecodedStreamObject()
+    stream.set_data(b'BT /F1 14 Tf 72 720 Td (Pessoa Teste Backend Junior Node.js TypeScript) Tj ET')
+    page[NameObject('/Contents')] = writer._add_object(stream)
+    output = BytesIO()
+    writer.write(output)
+    return output.getvalue()
+
+
+class FixtureSource(BaseSource):
+    name = "Fixture"
+
+    async def fetch(self, client: httpx.AsyncClient) -> FetchResult:
+        job = RawJob(source=self.name, title="Backend Developer Junior", company="Empresa fictícia", url="https://example.com/job", description="Backend TypeScript Node.js remoto", workplace_type="remote", location="Brazil")
+        return FetchResult(report=SourceReport(source=self.name, status=SourceStatus.OK, count=1), jobs=[job, job])
+
+
+def test_resume_search_application_and_tailoring_flow(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr(profile_store, "RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr(tracker, "TRACKER_DIR", tmp_path / "tracker")
+    monkeypatch.setattr(api, "default_sources", lambda: [FixtureSource()])
+    with TestClient(api.app) as client:
+        assert client.post('/profiles/upload', files={'file': ('bad.pdf', b'bad', 'application/pdf')}).status_code == 415
+        uploaded = client.post('/profiles/upload', files={'file': ('resume.pdf', _synthetic_pdf(), 'application/pdf')})
+        assert uploaded.status_code == 200
+        profile = uploaded.json()['profile']
+        profile['personal']['name'] = 'Pessoa Confirmada'
+        assert client.post(f"/profile/{profile['id']}/confirm", json=profile).status_code == 200
+        search = client.post('/jobs/search', json={'profile_id': profile['id'], 'regions': ['brazil'], 'work_modes': ['remote']})
+        assert search.status_code == 200
+        jobs = search.json()['jobs']
+        assert len(jobs) == 1 and jobs[0]['score'] > 0
+        entries = client.get(f"/tracker/{profile['id']}").json()['jobs']
+        assert len(entries) == 1
+        update = {'status': 'applied', 'notes': 'Aplicação manual fictícia', 'favorite': True}
+        assert client.post(f"/tracker/{profile['id']}/jobs/{entries[0]['id']}", json=update).status_code == 200
+        generated = client.post('/resumes/tailor', json={'profile_id': profile['id'], 'job': jobs[0]})
+        assert generated.status_code == 200
+        resume_id = generated.json()['id']
+        tex = client.get(f'/resumes/{resume_id}/download/tex')
+        assert tex.status_code == 200 and 'Pessoa Confirmada' in tex.text
+        if shutil.which('pdflatex'):
+            assert generated.json()['pdf_available']
+        if generated.json()['pdf_available']:
+            assert client.get(f'/resumes/{resume_id}/download/pdf').content.startswith(b'%PDF-')
+    with TestClient(api.app) as restarted:
+        assert restarted.get('/profile/current').json()['personal']['name'] == 'Pessoa Confirmada'
+        stored = restarted.get(f"/tracker/{profile['id']}").json()
+        assert stored['jobs'][0]['status'] == 'applied' and stored['jobs'][0]['favorite']
+        assert stored['jobs'][0]['notes'] == 'Aplicação manual fictícia'
