@@ -1,7 +1,7 @@
 FROM python:3.14-slim
 
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended texlive-fonts-recommended texlive-lang-portuguese && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-lang-portuguese && rm -rf /var/lib/apt/lists/*
 COPY pyproject.toml README.md ./
 COPY career ./career
 RUN pip install --no-cache-dir .
