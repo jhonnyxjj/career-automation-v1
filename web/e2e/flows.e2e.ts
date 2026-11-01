@@ -37,8 +37,18 @@ test("profile, import, application and tailored resume survive a refresh", async
   await expect(page.getByText("Currículo adaptado com sucesso.")).toBeVisible();
   const pdfResponse = await page.request.get(await page.getByRole("link", { name: "Baixar PDF" }).getAttribute("href") as string);
   expect((await pdfResponse.body()).subarray(0, 5).toString()).toBe("%PDF-");
-  const texResponse = await page.request.get(await page.getByRole("link", { name: "Baixar .tex" }).getAttribute("href") as string);
+  const texUrl = await page.getByRole("link", { name: "Baixar .tex" }).getAttribute("href") as string;
+  const texResponse = await page.request.get(texUrl);
   expect(await texResponse.text()).toContain("Pessoa Teste E2E");
+  await page.getByRole("button", { name: "Close" }).click();
+  await page.route("**/resumes/tailor", (route) => route.request().method() === "OPTIONS"
+    ? route.continue()
+    : route.fulfill({ headers: { "access-control-allow-origin": "http://localhost:13000" }, json: { id: texUrl.split("/").at(-3), pdf_available: false } }));
+  await page.getByRole("button", { name: "Adaptar currículo", exact: true }).click();
+  await page.getByRole("button", { name: "Gerar currículo adaptado" }).click();
+  await expect(page.getByText("PDF indisponível. O arquivo .tex está disponível para download.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Baixar .tex" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Baixar PDF" })).toHaveCount(0);
   await page.getByRole("button", { name: "Close" }).click();
   await page.route("**/jobs/search", (route) => route.abort());
   await page.getByRole("button", { name: "Buscar vagas" }).click();
