@@ -181,7 +181,7 @@ def search_profile(
         allowed_seniorities=seniorities,
         allowed_workplaces=work_modes,
         allowed_regions=regions,
-        role_areas={"backend", "fullstack", "frontend"},
+        role_areas={"backend", "fullstack"},
         desired_technologies=technologies,
         primary_languages={technology for technology, category in categories.items() if category == "language"},
         frameworks={technology for technology, category in categories.items() if category == "framework"},
