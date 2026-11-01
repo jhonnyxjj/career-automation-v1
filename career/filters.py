@@ -38,11 +38,12 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
             return FilterResult(accepted=False, reason="REGION_NOT_ALLOWED")
         if _has_geographic_restriction(job.description):
             return FilterResult(accepted=False, reason="REGION_UNKNOWN")
-        if job.workplace_type in {"hybrid", "onsite"} and "brazil" in profile.allowed_regions:
+        if job.workplace_type in {"hybrid", "onsite"} and "brazil" in profile.allowed_regions and _matches_region(job, {"brazil"}):
             location = normalized_text(job.location)
-            if re.fullmatch(r"(?:brazil|brasil)(?:\s*[,/-]\s*rj)?", location):
+            city = re.split(r"\s*[,;/]\s*|\s+-\s+", location, maxsplit=1)[0]
+            if city in {"brazil", "brasil", "rj", "estado do rio de janeiro"}:
                 return FilterResult(accepted=False, reason="LOCALITY_UNKNOWN")
-            if re.search(r"\b(?:brazil|brasil)\b", location) and not re.search(r"\b(?:rio de janeiro|petropolis)\b", location):
+            if city not in {"rio de janeiro", "petropolis"}:
                 return FilterResult(accepted=False, reason="LOCALITY_NOT_ALLOWED")
     if job.seniority == "mid" and not {"JavaScript", "TypeScript"}.intersection(job.technologies):
         reason = "MID_STACK_NOT_ALLOWED" if {"Java", "C#"}.intersection(job.technologies) else "MID_STACK_UNKNOWN"
