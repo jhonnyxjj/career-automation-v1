@@ -38,6 +38,12 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
             return FilterResult(accepted=False, reason="REGION_NOT_ALLOWED")
         if _has_geographic_restriction(job.description):
             return FilterResult(accepted=False, reason="REGION_UNKNOWN")
+        if job.workplace_type in {"hybrid", "onsite"} and "brazil" in profile.allowed_regions:
+            location = normalized_text(job.location)
+            if re.fullmatch(r"(?:brazil|brasil)(?:\s*[,/-]\s*rj)?", location):
+                return FilterResult(accepted=False, reason="LOCALITY_UNKNOWN")
+            if re.search(r"\b(?:brazil|brasil)\b", location) and not re.search(r"\b(?:rio de janeiro|petropolis)\b", location):
+                return FilterResult(accepted=False, reason="LOCALITY_NOT_ALLOWED")
     if job.seniority == "mid" and not {"JavaScript", "TypeScript"}.intersection(job.technologies):
         reason = "MID_STACK_NOT_ALLOWED" if {"Java", "C#"}.intersection(job.technologies) else "MID_STACK_UNKNOWN"
         return FilterResult(accepted=False, reason=reason)
@@ -65,7 +71,7 @@ def _matches_region(job: JobListing, allowed_regions: set[str]) -> bool:
     if re.search(r"\b(except|excluding|excluded|not|exceto|excluindo|nao)\b", location):
         return False
     aliases = {
-        "brazil": ("brazil", "brasil"),
+        "brazil": ("brazil", "brasil", "rio de janeiro", "petropolis"),
         "united_states": ("united states", "usa", "u.s."),
         "canada": ("canada",),
         "europe": ("europe", "europa", "germany", "france", "portugal", "spain", "netherlands"),

@@ -22,6 +22,8 @@ const filterReasons: Record<string, string> = {
   INCOMPATIBLE_STACK: "tecnologias não correspondem ao perfil",
   MID_STACK_NOT_ALLOWED: "vaga plena fora das stacks JavaScript/TypeScript",
   MID_STACK_UNKNOWN: "stack da vaga plena não confirmada",
+  LOCALITY_UNKNOWN: "cidade da vaga presencial ou híbrida não informada",
+  LOCALITY_NOT_ALLOWED: "cidade fora das localidades consideradas",
   NOT_DEVELOPMENT: "cargo não identificado como desenvolvimento",
 };
 
