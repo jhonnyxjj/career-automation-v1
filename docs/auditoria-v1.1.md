@@ -81,3 +81,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `bc12367` encaminha para revisão restrições geográficas que não mencionam nenhuma região específica aceita pelo perfil. Vagas globais que excluem Canadá ou Estados Unidos eram rejeitadas para um perfil brasileiro; os dois testes reproduziram a falha e passaram após a correção.
 - Verificações: 171 testes Python com lockfile e Ruff focado passaram; permanece o aviso de depreciação Starlette/httpx. Restrições compostas que mencionam também uma região aceita ainda exigem revisão; não presumir que o reconhecimento heurístico esgota todas as combinações.
 - Próxima ação: revisar as restrições compostas e os demais critérios de P1, antes de prosseguir para P2, P4, P3 e P5. Não declarar as fases concluídas sem comprovação; não publicar automaticamente.
+
+### Incremento P1 — restrições compostas
+
+- `3654926` encaminha restrições compostas e exclusões com múltiplas regiões preferidas para revisão; mantém a rejeição dos casos simples reconhecidos que excluem o Brasil quando ele é a única região específica desejada. Quatro cenários falharam antes da correção.
+- Verificações: 175 testes Python com lockfile e Ruff focado passaram; permanece aviso de depreciação Starlette/httpx. O reconhecimento é deliberadamente conservador e não interpreta todas as redações geográficas; a fase P1 ainda requer validação integral na interface.
+- Próxima ação: verificar os critérios restantes de P1 e avançar para P2, P4, P3 e P5; preservar alterações preexistentes, sem push automático. Último run remoto da CI conhecido continua reprovado.
