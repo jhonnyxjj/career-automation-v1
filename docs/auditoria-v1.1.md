@@ -105,3 +105,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `8ce8c44` extrai URLs HTTP(S) rotuladas como `Portfólio:` ou `Portfolio:` para o campo existente no editor; não confunde um link de projeto com portfólio. O cenário positivo falhou antes da implementação e os dois cenários passaram depois.
 - Verificações: 180 testes Python com lockfile e Ruff focado passaram. A primeira tentativa da suíte falhou antes de executar os testes por timeout ao baixar `hatchling` do PyPI; uma nova tentativa completou. O parser foi testado com texto sintético e leitor simulado; URLs sem rótulo ou sem protocolo não são inferidas.
 - Próxima ação: validar com PDFs sintéticos reais e continuar os critérios pendentes da P2, além da validação integral de P1; seguir P4, P3 e P5. O último run remoto conhecido da CI falhou; nenhum push foi feito. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
+
+### Incremento P2 — integração de portfólio com PDF real sintético
+
+- `c18657e` testa o upload de um PDF sintético com texto real e confirma que a API retorna o portfólio extraído, sem simular o leitor de PDF. O teste não cobre layouts variados nem links embutidos como anotações.
+- Verificações: 181 testes Python com lockfile e Ruff focado passaram; permanece aviso de depreciação Starlette/httpx.
+- Próxima ação: continuar P2 pelos formatos de extração ainda não suportados e falhas de compilação na interface; validar P1, P4, P3 e P5 conforme backlog. O último run remoto conhecido da CI falhou; sem push automático. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
