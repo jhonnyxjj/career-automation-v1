@@ -24,7 +24,7 @@
 ## Comandos de verificação
 
 - Backend: `uv run pytest`; sintaxe: `python -m compileall -q career`.
-- Lint Python focado: `ruff check --select E9,F63,F7,F82 career tests` (Ruff 0.17.3). Typecheck Python: não configurado.
+- Lint Python focado: `ruff check --select E9,F63,F7,F82 career tests` (Ruff 0.17.3). Typecheck Python: `uv run --locked --no-sync mypy career` após `uv sync --locked` (configuração padrão, não estrita).
 - Frontend: `cd web && bun run lint && bunx next typegen && bunx tsc --noEmit && bun test`; build: `cd web && bun run build`.
 - Compose: `docker compose config` e, quando aplicável, `docker compose up --build` com verificação de saúde.
 - E2E: use o Compose isolado e os comandos em `docs/operacao.md`; nunca aponte esses testes para dados pessoais.

@@ -4,7 +4,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from .models import ResumeTemplateData
+from .models import ResumeEducation, ResumeExperience, ResumeProject, ResumeTemplateData
 
 
 TEMPLATE_PATH = Path(__file__).with_name("templates") / "resume.tex"
@@ -103,18 +103,18 @@ class LaTeXRenderer:
     def _section(title: str, content: str) -> str:
         return rf"\section{{{title}}}" + "\n" + content
 
-    def _experience(self, item: object) -> str:
+    def _experience(self, item: ResumeExperience) -> str:
         heading = self._entry_heading(item.company, item.location)
         subheading = self._entry_sub(item.position, item.period)
         return "\n".join(part for part in (heading, subheading, self._bullets(item.bullets)) if part)
 
-    def _project(self, item: object) -> str:
+    def _project(self, item: ResumeProject) -> str:
         heading = self._entry_heading(item.name, item.context)
         technologies = r" \textbullet\ ".join(escape_latex(value) for value in item.technologies)
         subheading = rf"\entrysub{{{technologies}}}{{}}" if technologies else ""
         return "\n".join(part for part in (heading, subheading, self._bullets(item.bullets)) if part)
 
-    def _education(self, item: object) -> str:
+    def _education(self, item: ResumeEducation) -> str:
         return "\n".join((self._entry_heading(item.institution, item.location), self._entry_sub(item.course, item.period)))
 
     @staticmethod

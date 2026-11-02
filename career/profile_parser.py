@@ -23,7 +23,7 @@ SECTION_NAMES = {
 
 def _sections(lines: list[str]) -> dict[str, list[str]]:
     sections: dict[str, list[str]] = {}
-    current = None
+    current: str | None = None
     for line in lines:
         heading = normalized_text(line.rstrip(":"))
         if heading in SECTION_NAMES:
@@ -36,10 +36,10 @@ def _sections(lines: list[str]) -> dict[str, list[str]]:
 
 def _structured_entries(lines: list[str], kind: str) -> list:
     entries = []
-    current = None
+    current: ResumeExperience | ResumeEducation | ResumeProject | None = None
     for line in lines:
         if line.startswith(("- ", "• ", "* ")):
-            if current is not None and kind != "education":
+            if isinstance(current, (ResumeExperience, ResumeProject)):
                 current.bullets.append(line[2:].strip())
             continue
         fields = [part.strip() for part in re.split(r"\||\s+[–—]\s+", line)]

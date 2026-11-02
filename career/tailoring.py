@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import re
+from typing import TypeVar
 
-from .models import CandidateProfile, JobListing, ResumeTemplateData
+from .models import CandidateProfile, JobListing, ResumeExperience, ResumeProject, ResumeTemplateData
 from .normalizer import normalized_text
+
+
+ResumeItem = TypeVar("ResumeItem", ResumeExperience, ResumeProject)
 
 
 class ResumeTailoringService:
@@ -31,8 +35,8 @@ class ResumeTailoringService:
         )
 
     @staticmethod
-    def _prioritize(items: list[object], job_text: str, job_terms: set[str]) -> list[object]:
-        def relevance(item: object) -> int:
+    def _prioritize(items: list[ResumeItem], job_text: str, job_terms: set[str]) -> list[ResumeItem]:
+        def relevance(item: ResumeItem) -> int:
             text = normalized_text(" ".join(str(value) for value in item.__dict__.values() if value))
             return sum(bool(term) and bool(re.search(rf"(?<!\w){re.escape(term)}(?!\w)", text)) for term in job_terms) + sum(word in text for word in job_text.split() if len(word) > 4)
 

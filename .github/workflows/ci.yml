@@ -19,6 +19,7 @@ jobs:
       - run: uv sync --locked --no-editable
       - run: python -m compileall -q career
       - run: ruff check --select E9,F63,F7,F82 career tests
+      - run: uv run --locked --no-sync mypy career
       - run: uv run --locked --no-sync python -m pytest -q
 
   frontend:

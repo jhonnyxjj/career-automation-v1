@@ -49,7 +49,9 @@ def _to_raw_job(listing: dict, detail: dict, source: str, base_url: str) -> RawJ
     slug = listing.get("slug")
     title = detail.get("title") or listing.get("title")
     company = detail.get("companyName") or listing.get("companyName")
-    if not all(isinstance(value, str) and value.strip() for value in (slug, title, company)):
+    if not isinstance(slug, str) or not isinstance(title, str) or not isinstance(company, str):
+        return None
+    if not all(value.strip() for value in (slug, title, company)):
         return None
     city = detail.get("city") or listing.get("city")
     state = detail.get("state") or listing.get("state")
