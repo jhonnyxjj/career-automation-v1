@@ -46,3 +46,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `bf95f8d` encaminha para revisão vagas cuja localização informa somente modalidade remota, sem presumir país nem classificá-las como região proibida. Os cenários “Remote”, “Remoto”, “Home office” e “Work from home” falharam antes da correção; foram adicionados casos de pontuação, texto vazio e integração da busca.
 - Verificações: 117 testes Python e Ruff focado passaram; após acrescentar dois casos adicionais, os 28 testes direcionados de filtros/busca passaram. A CI remota continua reprovada no commit anterior e as correções locais ainda não foram publicadas.
 - Próxima ação: continuar P1 pela detecção de requisitos sênior explícitos e cenários de falha; P1 permanece em Backlog até comprovar os demais critérios.
+
+### Incremento P1 — requisitos sênior explícitos
+
+- `ff2bc34` identifica formulações diretas de exigência de experiência sênior em português e inglês; menções a colegas/mentores e frases negadas não são tratadas como exigências nos testes. Os casos de exigência falharam antes da correção.
+- Verificações: 128 testes Python e Ruff focado passaram com dependências travadas; o teste emitiu aviso de depreciação Starlette/httpx. A identificação é heurística e não cobre todas as formas de expressar requisitos sênior, staff, lead ou arquitetura.
+- Próxima ação: continuar P1 com as ambiguidades de senioridade e região, validar os critérios restantes e atualizar seu status no Notion somente após o aceite. Nenhum push foi feito; a CI remota da correção continua pendente.
