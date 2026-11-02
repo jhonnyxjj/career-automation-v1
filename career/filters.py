@@ -14,7 +14,7 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
 
     if job.expired:
         return FilterResult(accepted=False, reason="EXPIRED")
-    if job.seniority == "senior" or any(term in title for term in SENIOR_TITLE_TERMS):
+    if job.seniority == "senior" or any(term in title for term in SENIOR_TITLE_TERMS) or _requires_senior_experience(job.description):
         return FilterResult(accepted=False, reason="SENIORITY_NOT_ALLOWED")
     if job.seniority and job.seniority not in profile.allowed_seniorities:
         return FilterResult(accepted=False, reason="SENIORITY_NOT_ALLOWED")
@@ -61,6 +61,21 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
     if profile.desired_technologies and job.technologies and not set(job.technologies).intersection(profile.desired_technologies):
         return FilterResult(accepted=False, reason="INCOMPATIBLE_STACK")
     return FilterResult(accepted=True)
+
+
+def _requires_senior_experience(description: str | None) -> bool:
+    patterns = (
+        r"\b(?:requer|exige|exigimos)\s+(?:experiencia|perfil|nivel)\s+senior\b",
+        r"\b(?:requires?|must have)\s+senior(?:[- ]level)?\s+experience\b",
+        r"\bsenior\s+experience\s+(?:is\s+)?required\b",
+    )
+    for sentence in re.split(r"[.;\n]", description or ""):
+        value = normalized_text(sentence)
+        if re.search(r"\b(?:nao|sem|not)\b", value):
+            continue
+        if any(re.search(pattern, value) for pattern in patterns):
+            return True
+    return False
 
 
 def _matches_role_area(text: str, allowed_areas: set[str]) -> bool:

@@ -103,3 +103,24 @@ def test_global_jobs_with_brazil_exclusion_in_description_need_review(descriptio
 def test_work_mode_alone_does_not_imply_a_known_region(location):
     profile = javascript_profile(allowed_regions={'brazil', 'global'})
     assert hard_filter(job(location=location), profile).reason == 'REGION_UNKNOWN'
+
+
+@pytest.mark.parametrize('description', [
+    'Requer experiência sênior em desenvolvimento de APIs.',
+    'Exige perfil sênior para desenvolvimento backend.',
+    'Requires senior-level experience in backend development.',
+    'Senior experience required for backend development.',
+])
+def test_explicit_senior_requirement_is_rejected(description):
+    assert hard_filter(job(title='Backend Developer Junior', seniority='junior', description=description), javascript_profile()).reason == 'SENIORITY_NOT_ALLOWED'
+
+
+@pytest.mark.parametrize('description', [
+    'A pessoa júnior trabalhará com desenvolvedores sênior.',
+    'Requer colaboração com a equipe sênior de backend.',
+    'Junior developer mentored by senior engineers.',
+    'Não requer experiência sênior em desenvolvimento.',
+    'Senior experience is not required for this position.',
+])
+def test_senior_coworker_mention_is_not_a_requirement(description):
+    assert hard_filter(job(title='Backend Developer Junior', seniority='junior', description=description), javascript_profile()).accepted
