@@ -40,7 +40,7 @@ def _structured_entries(lines: list[str], kind: str) -> list:
         if line.startswith(("- ", "• ", "* ")) and entries and kind != "education":
             entries[-1].bullets.append(line[2:].strip())
             continue
-        fields = [part.strip() for part in line.split("|")]
+        fields = [part.strip() for part in re.split(r"\||\s+[–—]\s+", line)]
         if kind == "experience" and len(fields) == 3 and all(fields):
             entries.append(ResumeExperience(position=fields[0], company=fields[1], period=fields[2]))
         elif kind == "education" and len(fields) == 3 and all(fields):

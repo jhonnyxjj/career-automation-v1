@@ -161,3 +161,34 @@ def test_does_not_infer_city_from_experience(monkeypatch):
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
     personal = parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal
     assert personal.city is None and personal.state is None
+
+
+def test_extracts_structured_entries_separated_by_em_dash(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return ("Pessoa Exemplo\nExperiência\nDesenvolvedora — Empresa — 2021–2024\n"
+                    "- Criou APIs.\nProjetos\nProjeto — Aplicação web\n- Criou testes.\n"
+                    "Formação\nComputação — Universidade — 2017–2021")
+    class Reader:
+        is_encrypted = False
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    profile = parse_candidate_profile(b"fake", "id", Path("original.pdf"))
+    assert (profile.experiences[0].position, profile.experiences[0].company, profile.experiences[0].period) == ("Desenvolvedora", "Empresa", "2021–2024")
+    assert profile.experiences[0].bullets == ["Criou APIs."]
+    assert (profile.projects[0].name, profile.projects[0].context) == ("Projeto", "Aplicação web")
+    assert (profile.education[0].course, profile.education[0].institution, profile.education[0].period) == ("Computação", "Universidade", "2017–2021")
+
+
+def test_does_not_invent_missing_fields_in_dash_separated_experience(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return "Pessoa Exemplo\nExperiência\nDesenvolvedora — Empresa"
+    class Reader:
+        is_encrypted = False
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    profile = parse_candidate_profile(b"fake", "id", Path("original.pdf"))
+    assert profile.experiences == []
