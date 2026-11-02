@@ -144,3 +144,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `b7458f9` executa o `pdflatex` real com template inválido e confirma a preservação do `.tex` e dos metadados. O teste é ignorado em ambientes sem compilador. A falha real ainda não foi verificada pela interface; o E2E atual simula a resposta sem PDF.
 - A suíte completa passou com 188 testes Python e Ruff focado; permanece aviso de depreciação Starlette/httpx. Os incrementos e limites foram registrados na tarefa P2 do Notion, que continua Em Andamento.
 - Próxima ação: validar a interface com falha real de compilação e PDFs variados, concluir os critérios restantes da P2 e seguir P4, P3 e P5. Commits posteriores a `da4ab48` são locais; não fazer push automático. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
+
+### P2 — falha real de PDF no navegador
+
+- `a9d71fa` adiciona E2E com template inválido montado exclusivamente no Compose isolado. O `pdflatex` estava instalado; o navegador recebeu a resposta real de falha e baixou o `.tex` com os dados sintéticos. O procedimento está em `docs/operacao.md` e o teste especial é desativado na suíte normal.
+- Verificações: o E2E especial passou; após restaurar o template normal, três testes Playwright passaram e o teste especial foi ignorado como esperado. Lint, typecheck e validação do Compose especial passaram. A etapa foi registrada no Notion; P2 permanece Em Andamento.
+- Próxima ação: testar PDFs de layouts variados e preservação de versões, revisar o aceite restante da P2 e continuar P4, P3 e P5. Não fazer push automático; preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
