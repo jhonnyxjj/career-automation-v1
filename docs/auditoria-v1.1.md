@@ -204,3 +204,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `3517082` desativa o log de acesso HTTP do Uvicorn no container e adiciona uma verificação com marcador sintético à CI. Antes da correção, um parâmetro fictício apareceu no log; depois da reconstrução isolada, a API respondeu e o marcador não apareceu. Quatro E2E normais passaram após a mudança; o teste especial de falha LaTeX foi ignorado nessa execução.
 - Logs de inicialização e erros continuam ativos e podem conter informações sensíveis; o teste não prova ausência absoluta de PII. A verificação nova na CI ainda não foi executada remotamente.
 - P5 permanece Em Andamento no Notion. Próxima ação: revisar erros e privacidade remanescentes e confirmar a CI dos commits locais após publicação autorizada. Não fazer push automático.
+
+### P5 — validação em checkout Git limpo
+
+- Um clone Git limpo do commit `139207d`, com volume Docker sintético novo, passou na instalação por lockfiles, build/health Compose, 209 testes Python, mypy nos 34 arquivos, Ruff, compilação de sintaxe, lint/typecheck e cinco testes frontend, quatro E2E normais e o E2E separado de falha real de LaTeX.
+- Uma requisição com marcador sintético respondeu sem registrar o marcador no log de acesso. Isso não prova ausência de PII em todas as exceções; logs de inicialização e erro continuam potencialmente sensíveis. Permanece aviso de depreciação Starlette/httpx.
+- O resultado foi registrado no Notion. P5 permanece Em Andamento: a CI verde publicada cobre `a408ad1`, não os commits locais posteriores. Próxima ação: revisar tratamento de erros e observar a CI remota do estado local após publicação autorizada; não fazer push automaticamente.
