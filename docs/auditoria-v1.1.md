@@ -87,3 +87,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `3654926` encaminha restrições compostas e exclusões com múltiplas regiões preferidas para revisão; mantém a rejeição dos casos simples reconhecidos que excluem o Brasil quando ele é a única região específica desejada. Quatro cenários falharam antes da correção.
 - Verificações: 175 testes Python com lockfile e Ruff focado passaram; permanece aviso de depreciação Starlette/httpx. O reconhecimento é deliberadamente conservador e não interpreta todas as redações geográficas; a fase P1 ainda requer validação integral na interface.
 - Próxima ação: verificar os critérios restantes de P1 e avançar para P2, P4, P3 e P5; preservar alterações preexistentes, sem push automático. Último run remoto da CI conhecido continua reprovado.
+
+### Incremento P2 — telefone extraído do currículo
+
+- `545b67a` evita interpretar períodos de formação como telefone: busca números plausíveis no cabeçalho, antes das seções, sem concatenar linhas. O erro com `2020-2024` foi reproduzido antes da correção; um telefone brasileiro formatado também foi testado.
+- Verificações: 177 testes Python com lockfile e Ruff focado passaram; permanece aviso de depreciação Starlette/httpx. Números fora do cabeçalho, na mesma linha de e-mail/link ou com menos de dez dígitos podem exigir correção manual. Os testes usam texto sintético e extração de PDF simulada, não PDFs variados.
+- Próxima ação: ampliar e validar a extração de P2 com currículos sintéticos representativos, além de concluir a validação da P1; seguir P4, P3 e P5. A CI remota continua pendente de publicação autorizada. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
