@@ -198,3 +198,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - Em cópia isolada dos arquivos versionados em `17e56ac` e volume novo, passaram instalação com lockfiles, build/health Compose, 209 testes Python, mypy nos 34 arquivos, Ruff e sintaxe, lint/typecheck e cinco testes frontend, quatro E2E normais e um E2E separado de falha real de LaTeX. A cópia excluiu arquivos pessoais e não é um checkout Git integral.
 - Os logs coletados após recriar o container não continham três marcadores sintéticos de nome/nota; isso não demonstra ausência absoluta de PII em todos os caminhos. O aviso Starlette/httpx permanece. A CI remota verde de `a408ad1` não cobre os commits locais posteriores, inclusive o novo mypy; P5 permanece Em Andamento no Notion.
 - Próxima ação: revisar exceções e privacidade remanescentes e validar a CI dos commits locais quando houver publicação autorizada. Os arquivos `.agents/memory.md` e `CONTINUIDADE.md`, antes preexistentes sem commit, passaram a constar no commit `a4566bc` criado fora destas entregas; preservá-los e conferir o estado atual.
+
+### P5 — privacidade de logs de acesso
+
+- `3517082` desativa o log de acesso HTTP do Uvicorn no container e adiciona uma verificação com marcador sintético à CI. Antes da correção, um parâmetro fictício apareceu no log; depois da reconstrução isolada, a API respondeu e o marcador não apareceu. Quatro E2E normais passaram após a mudança; o teste especial de falha LaTeX foi ignorado nessa execução.
+- Logs de inicialização e erros continuam ativos e podem conter informações sensíveis; o teste não prova ausência absoluta de PII. A verificação nova na CI ainda não foi executada remotamente.
+- P5 permanece Em Andamento no Notion. Próxima ação: revisar erros e privacidade remanescentes e confirmar a CI dos commits locais após publicação autorizada. Não fazer push automático.
