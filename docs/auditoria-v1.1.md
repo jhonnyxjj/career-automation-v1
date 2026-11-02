@@ -52,3 +52,8 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `ff2bc34` identifica formulações diretas de exigência de experiência sênior em português e inglês; menções a colegas/mentores e frases negadas não são tratadas como exigências nos testes. Os casos de exigência falharam antes da correção.
 - Verificações: 128 testes Python e Ruff focado passaram com dependências travadas; o teste emitiu aviso de depreciação Starlette/httpx. A identificação é heurística e não cobre todas as formas de expressar requisitos sênior, staff, lead ou arquitetura.
 - Próxima ação: continuar P1 com as ambiguidades de senioridade e região, validar os critérios restantes e atualizar seu status no Notion somente após o aceite. Nenhum push foi feito; a CI remota da correção continua pendente.
+
+### Incremento P1 — data de publicação
+
+- `b90e535` deixa a data de publicação do Greenhouse desconhecida em vez de usar `updated_at`. O teste reproduziu o erro antes da mudança; a suíte com lockfile passou depois com 129 testes, e o lint Ruff focado passou. A listagem pública não apresentou data de primeira publicação no exemplo da documentação oficial; não foi adicionada uma consulta por vaga.
+- Próxima ação: concluir a revisão de P1, incluindo elegibilidade, erros de rede e persistência dos resultados, antes de alterar o status da fase. A CI remota da correção continua pendente de publicação autorizada.
