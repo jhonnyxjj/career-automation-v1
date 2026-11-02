@@ -84,6 +84,8 @@ def parse_candidate_profile(pdf_content: bytes, profile_id: str, original_path: 
     urls = re.findall(r"https?://[^\s<>]+", text)
     linkedin = next((url.rstrip(".,;") for url in urls if re.search(r"^https?://(?:www\.)?linkedin\.com/", url, re.I)), None)
     github = next((url.rstrip(".,;") for url in urls if re.search(r"^https?://(?:www\.)?github\.com/", url, re.I)), None)
+    portfolio_match = re.search(r"\bportf[oó]lio\s*:\s*(https?://[^\s<>]+)", text, re.I)
+    portfolio = portfolio_match.group(1).rstrip(".,;") if portfolio_match else None
     sections = _sections(lines)
     skills_by_category: dict[str, list[str]] = {}
     labels = {"language": "Linguagens", "framework": "Frameworks", "database": "Banco de Dados", "cloud_devops": "Cloud & DevOps", "complementary": "Ferramentas"}
@@ -94,7 +96,7 @@ def parse_candidate_profile(pdf_content: bytes, profile_id: str, original_path: 
     return CandidateProfile(
         id=profile_id,
         original_resume_path=str(original_path),
-        personal=ResumePersonalDetails(name=name, headline=headline, email=email_match.group() if email_match else None, phone=phone, linkedin=linkedin, github=github),
+        personal=ResumePersonalDetails(name=name, headline=headline, email=email_match.group() if email_match else None, phone=phone, linkedin=linkedin, github=github, portfolio=portfolio),
         professional_summary=" ".join(sections.get("summary", [])) or None,
         technical_skills=[TechnicalSkillGroup(category=category, items=items) for category, items in skills_by_category.items()],
         experiences=_structured_entries(sections.get("experience", []), "experience"),

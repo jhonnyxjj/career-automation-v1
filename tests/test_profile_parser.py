@@ -86,3 +86,27 @@ def test_extracts_formatted_phone_number(monkeypatch):
             self.pages = [Page()]
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
     assert parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal.phone == "+55 (21) 99999-1234"
+
+
+def test_extracts_only_explicitly_labeled_portfolio(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return "Pessoa Exemplo\nPortfólio: https://example.com/pessoa\nProjetos\nProjeto | https://example.org/projeto"
+    class Reader:
+        is_encrypted = False
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    assert parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal.portfolio == "https://example.com/pessoa"
+
+
+def test_project_link_is_not_invented_as_portfolio(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return "Pessoa Exemplo\nProjetos\nProjeto | https://example.org/projeto"
+    class Reader:
+        is_encrypted = False
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    assert parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal.portfolio is None
