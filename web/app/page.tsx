@@ -70,7 +70,7 @@ export default function Home() {
     if (!profile) return;
     const skills = new Set(profile.technical_skills.flatMap((group) => group.items));
     const selected = toJobMatch(job, skills);
-    setJobs((current) => [selected, ...current.filter((item) => item.id !== selected.id)]);
+    setJobs((current) => [selected, ...current.filter((item) => item.id !== selected.id && jobFingerprint(item.listing) !== jobFingerprint(job))]);
   }
 
   function addImportedJob(job: JobListing) {
@@ -84,4 +84,10 @@ export default function Home() {
 function toJobMatch(job: JobListing, skills: Set<string>): JobMatch {
   const matched = job.technologies.filter((technology) => skills.has(technology));
   return { id: job.external_id ?? job.url, source: job.source, listingType: job.listing_type, title: job.title, company: job.company, location: job.location ?? undefined, workMode: job.workplace_type ?? undefined, technologies: job.technologies, score: job.score, matchedRequirements: matched.length, totalRequirements: job.technologies.length, missingSkills: job.technologies.filter((technology) => !skills.has(technology)), description: job.description ?? undefined, originUrl: job.url, applyUrl: job.apply_url ?? undefined, listing: job };
+}
+
+function jobFingerprint(job: JobListing) {
+  return [job.company, job.title, job.location ?? ""].map((value) =>
+    value.normalize("NFKD").replace(/\p{M}/gu, "").replace(/\s+/g, " ").trim().toLowerCase(),
+  ).join("|");
 }

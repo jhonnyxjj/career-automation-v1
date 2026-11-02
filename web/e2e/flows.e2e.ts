@@ -113,3 +113,24 @@ test("search shows uncertain location and partial source failure", async ({ page
   await expect(page.getByText("Fonte indisponível: ERROR · 0 vaga(s) · Falha ao consultar a fonte.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Buscar vagas" })).toBeEnabled();
 });
+
+test("importing the same vacancy from two platforms shows one result", async ({ page }) => {
+  await page.goto("/");
+  const replacement = page.getByText("Trocar currículo");
+  if (await replacement.isVisible()) await replacement.click();
+  await page.locator('input[type="file"]').first().setInputFiles(path.join(__dirname, "resume-fixture.pdf"));
+  await page.getByRole("button", { name: "Salvar e confirmar" }).click();
+  await expect(page.getByText("Perfil salvo e confirmado.")).toBeVisible();
+  for (const source of ["LinkedIn", "Indeed"]) {
+    await page.getByRole("button", { name: "Importar vaga ou post" }).click();
+    await page.getByLabel("Fonte").selectOption(source);
+    await page.getByLabel("Cargo").fill(source === "LinkedIn" ? "Backend Developer Junior" : "BACKEND DEVELOPER JUNIOR");
+    await page.getByLabel("Empresa").fill(source === "LinkedIn" ? "Empresa Duplicada Sintética" : "EMPRESA DUPLICADA SINTETICA");
+    await page.getByLabel("Descrição da vaga").fill("Backend remoto no Brasil com TypeScript.");
+    await page.getByLabel("URL da origem").fill(`https://example.com/${source.toLowerCase()}/${Date.now()}`);
+    await page.getByLabel("Localização (opcional)").fill("Brasil");
+    await page.getByRole("button", { name: "Analisar vaga" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  }
+  await expect(page.locator('section[aria-labelledby="results-title"]').getByRole("button", { name: "Detalhes" })).toHaveCount(1);
+});
