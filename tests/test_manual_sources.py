@@ -59,3 +59,31 @@ def test_synthetic_platform_examples_use_the_same_import_pipeline(source, url, t
     assert job['source'] == source and job['filter_accepted'] is True
     assert job['workplace_type'] == 'remote' and 'TypeScript' in job['technologies']
     assert job['score'] > 0
+
+
+def test_same_manual_vacancy_from_two_platforms_keeps_one_application(monkeypatch, tmp_path):
+    from career import profile_store
+
+    monkeypatch.setattr('career.resume_storage.RESUMES_DIR', tmp_path / 'resumes')
+    monkeypatch.setattr(profile_store, 'RESUMES_DIR', tmp_path / 'resumes')
+    monkeypatch.setattr('career.tracker.TRACKER_DIR', tmp_path / 'tracker')
+    profile_id = str(uuid4())
+    profile = CandidateProfile(id=profile_id, personal=ResumePersonalDetails(name='Pessoa Teste'))
+    ResumeRepository().save_original(profile)
+    profile_store.save_confirmed(profile_id, profile)
+    payload = {'profile_id': profile_id, 'source': 'LinkedIn', 'title': 'Backend Junior',
+               'company': 'Empresa fictícia', 'description': 'Backend remoto no Brasil',
+               'source_url': 'https://www.linkedin.com/jobs/view/12345', 'location': 'Brasil'}
+    with TestClient(app) as client:
+        assert client.post('/jobs/import', json=payload).status_code == 200
+        entries = client.get(f'/tracker/{profile_id}').json()['jobs']
+        entry_id = entries[0]['id']
+        assert client.post(f'/tracker/{profile_id}/jobs/{entry_id}', json={
+            'status': 'applied', 'notes': 'Nota fictícia', 'favorite': True,
+        }).status_code == 200
+        payload.update(source='Indeed', source_url='https://br.indeed.com/viewjob?jk=fixture123')
+        assert client.post('/jobs/import', json=payload).status_code == 200
+        saved = client.get(f'/tracker/{profile_id}').json()['jobs']
+
+    assert len(saved) == 1 and saved[0]['id'] == entry_id
+    assert saved[0]['status'] == 'applied' and saved[0]['notes'] == 'Nota fictícia' and saved[0]['favorite']
