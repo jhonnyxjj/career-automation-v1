@@ -137,3 +137,10 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - No estado local `a078d64`, passaram 186 testes Python, cinco testes frontend, lint/typecheck frontend e três Playwright no Compose isolado reconstruído; `docker compose config` confirmou bind em `127.0.0.1`. CI remota do commit anterior `da4ab48` passou; commits locais posteriores não estão nessa CI.
 - Limitações registradas no Notion: reconhecimento geográfico e senioridade heurístico, resposta de busca simulada no teste de navegador e nenhum teste exaustivo de fontes reais; o backend não requisita URLs manuais e não resolve DNS na validação desses links. Aviso Starlette/httpx permanece.
 - Próxima ação: P2, especialmente PDFs textuais variados, experiência/projetos/formação, confirmação e preservação do original, e falha de LaTeX; depois P4, P3 e P5. Não fazer push automático; preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
+
+### P2 — integração com PDF e falha de compilação
+
+- `eb9d165` testa um PDF textual sintético real com resumo, experiência, projeto e formação no formato estruturado existente, confirmação, leitura do perfil atual e preservação byte a byte do original. Não valida todos os layouts.
+- `b7458f9` executa o `pdflatex` real com template inválido e confirma a preservação do `.tex` e dos metadados. O teste é ignorado em ambientes sem compilador. A falha real ainda não foi verificada pela interface; o E2E atual simula a resposta sem PDF.
+- A suíte completa passou com 188 testes Python e Ruff focado; permanece aviso de depreciação Starlette/httpx. Os incrementos e limites foram registrados na tarefa P2 do Notion, que continua Em Andamento.
+- Próxima ação: validar a interface com falha real de compilação e PDFs variados, concluir os critérios restantes da P2 e seguir P4, P3 e P5. Commits posteriores a `da4ab48` são locais; não fazer push automático. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
