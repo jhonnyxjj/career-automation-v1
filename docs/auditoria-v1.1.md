@@ -166,6 +166,6 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 
 ### Publicação, validação e continuidade — 2026-11-02
 
-- A pedido do usuário, foi feito push até `a408ad1`. A [CI correspondente](https://github.com/jhonnyxjj/career-automation-v1/actions/runs/41459341087) estava em andamento na última consulta bem-sucedida: backend e frontend aprovados; Compose e navegador ainda executando. Uma consulta posterior falhou por erro de rede.
+- A pedido do usuário, foi feito push até `a408ad1`. A [CI correspondente](https://github.com/jhonnyxjj/career-automation-v1/actions/runs/41459341087) terminou com sucesso: backend, frontend, Compose e navegador passaram.
 - `b0e395b` valida o separador por travessão no upload de PDF textual sintético real, sem simular o leitor. A suíte passou com 195 testes Python e Ruff focado; o commit é posterior ao push. O progresso foi registrado na tarefa P2 do Notion, que continua Em Andamento.
-- O relatório [continuidade-v1.1.md](continuidade-v1.1.md) reúne funcionalidades existentes, fases pendentes, testes, limitações, commits e comandos para retomada. Próxima ação: confirmar a CI e continuar P2; depois P4, P3 e P5. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes; não fazer novo push automaticamente.
+- O relatório [continuidade-v1.1.md](continuidade-v1.1.md) reúne funcionalidades existentes, fases pendentes, testes, limitações, commits e comandos para retomada. Próxima ação: continuar P2; depois P4, P3 e P5. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes; não fazer novo push automaticamente.
