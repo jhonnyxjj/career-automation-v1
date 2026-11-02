@@ -75,3 +75,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `fbce015` encaminha localidades não reconhecidas para revisão, incluindo no fluxo de busca, e evita identificar siglas de região dentro de outras palavras. Localidades reconhecidas fora das preferências continuam rejeitadas; a lista de regiões ainda é limitada e restrições geográficas complexas precisam de revisão.
 - Verificações: 169 testes Python com lockfile e Ruff focado passaram; houve aviso de depreciação Starlette/httpx. Antes deste incremento, dois testes E2E passaram no Compose isolado com dados sintéticos; eles não foram repetidos após a alteração do filtro.
 - Próxima ação: revisar restrições geográficas ambíguas e os demais critérios de P1; depois seguir P2, P4, P3 e P5. P1–P5 ainda não têm aceite comprovado. O último run remoto conhecido da CI falhou e as correções locais não foram publicadas. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
+
+### Incremento P1 — restrições sobre outras regiões
+
+- `bc12367` encaminha para revisão restrições geográficas que não mencionam nenhuma região específica aceita pelo perfil. Vagas globais que excluem Canadá ou Estados Unidos eram rejeitadas para um perfil brasileiro; os dois testes reproduziram a falha e passaram após a correção.
+- Verificações: 171 testes Python com lockfile e Ruff focado passaram; permanece o aviso de depreciação Starlette/httpx. Restrições compostas que mencionam também uma região aceita ainda exigem revisão; não presumir que o reconhecimento heurístico esgota todas as combinações.
+- Próxima ação: revisar as restrições compostas e os demais critérios de P1, antes de prosseguir para P2, P4, P3 e P5. Não declarar as fases concluídas sem comprovação; não publicar automaticamente.
