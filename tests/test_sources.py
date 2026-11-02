@@ -91,3 +91,20 @@ def test_remotinho_extracts_public_listing_and_destination_url():
     assert result.jobs[0].title == "Backend Engineer"
     assert result.jobs[0].description == "Python, FastAPI e PostgreSQL."
     assert result.jobs[0].apply_url == "https://jobs.example.com/1"
+
+
+def test_greenhouse_update_timestamp_is_not_used_as_publication_date(monkeypatch):
+    from career.config.sources import SourceTarget
+    from career.sources.greenhouse import GreenhouseSource
+
+    monkeypatch.setattr('career.sources.greenhouse._targets_from_settings', lambda *_: (SourceTarget('fixture', 'Empresa'),))
+
+    async def fetch():
+        response = {'jobs': [{'id': 1, 'title': 'Backend Junior', 'absolute_url': 'https://example.com/job',
+                              'updated_at': '2026-11-02T12:00:00Z'}]}
+        async with httpx.AsyncClient(transport=httpx.MockTransport(lambda request: httpx.Response(200, json=response))) as client:
+            return await GreenhouseSource().fetch(client)
+
+    result = asyncio.run(fetch())
+    assert result.report.status == SourceStatus.OK
+    assert result.jobs[0].published_at is None

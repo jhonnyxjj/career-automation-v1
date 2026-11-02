@@ -35,7 +35,6 @@ class GreenhouseSource(BaseSource):
                         description=job.get("content"),
                         location=(job.get("location") or {}).get("name"),
                         url=job["absolute_url"],
-                        published_at=job.get("updated_at"),
                     )
                     for job in payload.get("jobs", [])
                 ]
