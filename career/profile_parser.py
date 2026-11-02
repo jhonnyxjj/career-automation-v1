@@ -73,9 +73,8 @@ def parse_candidate_profile(pdf_content: bytes, profile_id: str, original_path: 
     for line in lines:
         if normalized_text(line.rstrip(":")) in SECTION_NAMES:
             break
-        if "@" in line or "http" in line.lower():
-            continue
-        for match in re.finditer(r"\+?\d[\d ().-]{7,}\d", line):
+        contact_line = re.sub(r"https?://[^\s<>]+|[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", " ", line, flags=re.I)
+        for match in re.finditer(r"\+?\d[\d ().-]{7,}\d", contact_line):
             if 10 <= len(re.sub(r"\D", "", match.group())) <= 15:
                 phone = match.group()
                 break

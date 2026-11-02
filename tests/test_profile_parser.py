@@ -110,3 +110,27 @@ def test_project_link_is_not_invented_as_portfolio(monkeypatch):
             self.pages = [Page()]
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
     assert parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal.portfolio is None
+
+
+def test_extracts_phone_sharing_line_with_email_and_link(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return "Pessoa Exemplo\npessoa1234567890@example.com | +55 (21) 99999-1234 | https://example.com/1234567890"
+    class Reader:
+        is_encrypted = False
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    assert parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal.phone == "+55 (21) 99999-1234"
+
+
+def test_digits_in_email_or_link_are_not_extracted_as_phone(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return "Pessoa Exemplo\npessoa1234567890@example.com | https://example.com/1234567890"
+    class Reader:
+        is_encrypted = False
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    assert parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal.phone is None
