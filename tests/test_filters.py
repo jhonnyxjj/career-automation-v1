@@ -148,3 +148,9 @@ def test_staff_lead_or_architect_coworker_mention_remains_eligible(description):
 def test_unrecognized_location_is_reviewed_instead_of_rejected(location):
     profile = javascript_profile(allowed_regions={'brazil', 'global'})
     assert hard_filter(job(location=location), profile).reason == 'REGION_UNKNOWN'
+
+
+@pytest.mark.parametrize('location', ['Worldwide except Canada', 'Global excluding United States'])
+def test_restriction_on_another_region_is_reviewed(location):
+    profile = javascript_profile(allowed_regions={'brazil', 'global'})
+    assert hard_filter(job(location=location), profile).reason == 'REGION_UNKNOWN'
