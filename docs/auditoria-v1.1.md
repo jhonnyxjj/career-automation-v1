@@ -176,3 +176,10 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `76b1d45` corrige confusão entre Java e JavaScript na ordenação de experiências; `f44a102` evita atribuir atividades de experiência incompleta à anterior. Os erros foram reproduzidos antes das correções. No estado `f44a102`, 198 testes Python e Ruff focado passaram; cinco testes frontend, lint, typecheck, três E2E normais e o E2E separado de falha real passaram, com Compose isolado reconstruído.
 - Limitações: extração heurística requer revisão, não há OCR, e PDFs em colunas ou com ordenação/separadores ambíguos podem não ser extraídos corretamente; atividades não associáveis são omitidas. O aviso Starlette/httpx permanece. A CI verde do commit publicado `a408ad1` não cobre commits locais posteriores.
 - Próxima ação: P4 — verificar restart real de containers, restauração de backup isolado e integridade/idempotência; depois P3 e P5. Não fazer push automático; preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
+
+### Aceite P4 — 2026-11-02
+
+- P4 foi marcada como Concluída no Notion e confirmada por releitura. Após gerar perfil e candidatura sintéticos no navegador, reiniciou-se a API do Compose isolado e foram confirmados perfil, vaga, situação, favorita e nota por HTTP.
+- Um backup tar do volume sintético foi restaurado em volume vazio e lido por uma API isolada separada. Perfil, vaga, URL, score, situação, nota, favorita e histórico foram verificados; atualização repetida preservou histórico e timestamp. Testes existentes cobrem persistência de buscas, idempotência e corrupção de JSON.
+- Limitações: backup é manual, sem exportação na interface ou mesclagem; a trava de concorrência é de um processo. Os volumes `career-v11-synthetic-backup-20261102` e `career-v11-synthetic-restore-20261102` contêm somente dados de teste e foram preservados. Dados pessoais não foram usados.
+- Próxima ação: P3 — fixtures representativas das seis fontes manuais, deduplicação, falhas e limites de rede; depois P5. Não fazer push automático; preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
