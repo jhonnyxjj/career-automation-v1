@@ -49,7 +49,7 @@ def infer_workplace(text: str) -> str | None:
         return "hybrid"
     if re.search(r"\b(on[- ]?site|in[- ]?office|presencial|office based)\b", value):
         return "onsite"
-    if re.search(r"\b(remote|remoto|home office|work from home)\b", value):
+    if re.search(r"\b(remote|remot[oa]|home office|work from home)\b", value):
         return "remote"
     return None
 

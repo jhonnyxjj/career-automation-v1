@@ -36,3 +36,8 @@ def test_infers_in_office_as_onsite():
 def test_hybrid_takes_precedence_over_remote_mentions():
     job = normalize_job(RawJob(source="Example", title="Backend Engineer", company="Acme", url="https://example.com/1", workplace_type="remote", description="Hybrid position with remote days"))
     assert job.workplace_type == "hybrid"
+
+
+def test_feminine_remote_word_is_recognized():
+    job = normalize_job(RawJob(source="Example", title="Backend Junior", company="Empresa", url="https://example.com/1", description="Vaga remota no Brasil"))
+    assert job.workplace_type == "remote"
