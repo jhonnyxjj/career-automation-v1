@@ -156,3 +156,10 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `9fead3d` valida pela API a troca entre dois PDFs sintéticos: o perfil anterior permanece ativo até confirmar o novo; ambos os perfis e originais continuam disponíveis, com comparação byte a byte. A restauração foi verificada em novo cliente de teste, sem reiniciar containers.
 - Verificações: 189 testes Python e Ruff focado passaram; permanece aviso de depreciação Starlette/httpx. O resultado foi registrado no Notion; P2 permanece Em Andamento.
 - Próxima ação: validar PDFs de layouts variados e os critérios restantes de P2; depois P4, P3 e P5. Commits posteriores a `da4ab48` continuam locais; preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes e não fazer push automático.
+
+### P2 — PDFs ilegíveis, multipágina e separadores
+
+- `b764cba` comprova que PDFs sintéticos truncado e sem texto são rejeitados sem modificar o perfil confirmado ou o PDF original; `90bf78d` valida extração em PDF textual sintético linear de três páginas. Esses testes não abrangem layouts em colunas ou PDFs digitalizados.
+- `090c49d` acrescenta suporte a travessões com espaços entre campos de experiência, projeto e formação, além da barra vertical existente. O teste reproduziu a ausência de experiência antes da correção e verifica que campos incompletos não são inventados; o leitor de PDF é simulado nesse cenário. Datas com travessões cercados de espaços e layouts complexos podem exigir correção manual.
+- Verificações finais: 194 testes Python com lockfile e Ruff focado passaram; permanece aviso de depreciação Starlette/httpx. As entregas e limitações foram registradas na tarefa P2 do Notion, que permanece Em Andamento.
+- Próxima ação: validar o novo separador em PDF textual sintético real e revisar os critérios restantes da P2, depois seguir P4, P3 e P5. Commits posteriores a `da4ab48` são locais; preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes e não fazer push automático.
