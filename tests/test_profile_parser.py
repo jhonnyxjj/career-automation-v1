@@ -28,6 +28,7 @@ Node.js PostgreSQL
         def extract_text(self):
             return text
     class Reader:
+        is_encrypted = False
         def __init__(self, _):
             self.pages = [Page()]
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
@@ -43,6 +44,7 @@ Node.js PostgreSQL
 
 def test_empty_extracted_pdf_is_rejected(monkeypatch):
     class Reader:
+        is_encrypted = False
         def __init__(self, _):
             self.pages = []
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
@@ -55,6 +57,7 @@ def test_page_number_is_not_a_headline(monkeypatch):
         def extract_text(self):
             return "Pessoa Exemplo\n1"
     class Reader:
+        is_encrypted = False
         def __init__(self, _):
             self.pages = [Page()]
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
@@ -66,6 +69,7 @@ def test_education_dates_are_not_extracted_as_a_phone_number(monkeypatch):
         def extract_text(self):
             return "Pessoa Exemplo\nFormação\nComputação | Universidade | 2020-2024"
     class Reader:
+        is_encrypted = False
         def __init__(self, _):
             self.pages = [Page()]
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
@@ -77,6 +81,7 @@ def test_extracts_formatted_phone_number(monkeypatch):
         def extract_text(self):
             return "Pessoa Exemplo\n+55 (21) 99999-1234\nFormação\nComputação | Universidade | 2020-2024"
     class Reader:
+        is_encrypted = False
         def __init__(self, _):
             self.pages = [Page()]
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)

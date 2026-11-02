@@ -53,9 +53,11 @@ def _structured_entries(lines: list[str], kind: str) -> list:
 def parse_candidate_profile(pdf_content: bytes, profile_id: str, original_path: Path) -> CandidateProfile:
     try:
         reader = PdfReader(BytesIO(pdf_content))
+        if reader.is_encrypted:
+            raise ValueError("O PDF está protegido por senha. Envie uma cópia desbloqueada.")
+        text = "\n".join(page.extract_text() or "" for page in reader.pages)
     except PdfReadError as error:
         raise ValueError("Não foi possível ler o PDF enviado.") from error
-    text = "\n".join(page.extract_text() or "" for page in reader.pages)
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     if not lines:
         raise ValueError("Não foi possível extrair texto do PDF.")

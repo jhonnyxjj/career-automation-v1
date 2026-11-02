@@ -24,6 +24,21 @@ def _synthetic_pdf() -> bytes:
     return output.getvalue()
 
 
+def test_password_protected_pdf_is_rejected_without_leaving_a_file(monkeypatch, tmp_path):
+    monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
+    writer = PdfWriter()
+    writer.add_blank_page(width=612, height=792)
+    writer.encrypt("synthetic-test-password")
+    output = BytesIO()
+    writer.write(output)
+
+    with TestClient(api.app) as client:
+        response = client.post('/profiles/upload', files={'file': ('protected.pdf', output.getvalue(), 'application/pdf')})
+
+    assert response.status_code == 422
+    assert not list((tmp_path / "resumes" / "original").glob("*.pdf"))
+
+
 class FixtureSource(BaseSource):
     name = "Fixture"
 
