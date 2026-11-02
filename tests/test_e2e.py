@@ -39,6 +39,34 @@ def test_upload_extracts_labeled_portfolio_from_real_pdf(monkeypatch, tmp_path):
     assert response.json()['profile']['personal']['portfolio'] == 'https://example.com/pessoa'
 
 
+def test_real_text_pdf_sections_can_be_confirmed_and_restored(monkeypatch, tmp_path):
+    monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr(profile_store, "RESUMES_DIR", tmp_path / "resumes")
+    lines = [
+        b'Pessoa Teste', b'Resumo', b'Desenvolvedora backend.', b'Experiencia',
+        b'Desenvolvedora | Empresa Teste | 2021-2024', b'- Criou APIs.',
+        b'Projetos', b'Projeto Exemplo | Aplicacao web', b'- Criou testes.',
+        b'Formacao', b'Computacao | Universidade Teste | 2017-2021',
+    ]
+    content = b'BT /F1 14 Tf 72 720 Td ' + b' 0 -20 Td '.join(b'(' + line + b') Tj' for line in lines) + b' ET'
+    pdf = _synthetic_pdf(content)
+
+    with TestClient(api.app) as client:
+        response = client.post('/profiles/upload', files={'file': ('resume.pdf', pdf, 'application/pdf')})
+        assert response.status_code == 200
+        profile = response.json()['profile']
+        assert profile['professional_summary'] == 'Desenvolvedora backend.'
+        assert profile['experiences'][0]['company'] == 'Empresa Teste'
+        assert profile['experiences'][0]['bullets'] == ['Criou APIs.']
+        assert profile['projects'][0]['name'] == 'Projeto Exemplo'
+        assert profile['education'][0]['institution'] == 'Universidade Teste'
+        profile['personal']['name'] = 'Pessoa Confirmada'
+        assert client.post(f"/profile/{profile['id']}/confirm", json=profile).status_code == 200
+        assert client.get('/profile/current').json()['personal']['name'] == 'Pessoa Confirmada'
+        assert (tmp_path / 'resumes' / 'original' / f"{profile['id']}.pdf").read_bytes() == pdf
+
+
 def test_password_protected_pdf_is_rejected_without_leaving_a_file(monkeypatch, tmp_path):
     monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
     writer = PdfWriter()
