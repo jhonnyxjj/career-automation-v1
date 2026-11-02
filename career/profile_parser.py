@@ -66,7 +66,7 @@ def parse_candidate_profile(pdf_content: bytes, profile_id: str, original_path: 
     headline = None
     if len(lines) > 1:
         candidate = lines[1]
-        if re.search(r"[A-Za-zÀ-ÿ]", candidate) and "@" not in candidate and "http" not in candidate.lower() and not re.search(r"\d{5,}", candidate) and normalized_text(candidate.rstrip(":")) not in SECTION_NAMES:
+        if re.search(r"[A-Za-zÀ-ÿ]", candidate) and "@" not in candidate and "http" not in candidate.lower() and not re.search(r"\d{5,}", candidate) and not re.match(r"(?:cidade|uf)\s*:", candidate, re.I) and normalized_text(candidate.rstrip(":")) not in SECTION_NAMES:
             headline = candidate[:160]
     email_match = re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
     phone = None
@@ -81,6 +81,16 @@ def parse_candidate_profile(pdf_content: bytes, profile_id: str, original_path: 
         if phone:
             break
     urls = re.findall(r"https?://[^\s<>]+", text)
+    city = state = None
+    for line in lines:
+        if normalized_text(line.rstrip(":")) in SECTION_NAMES:
+            break
+        city_match = re.fullmatch(r"cidade\s*:\s*([^|,;]+)", line, re.I)
+        state_match = re.fullmatch(r"uf\s*:\s*([A-Za-z]{2})", line, re.I)
+        if city_match and city is None:
+            city = city_match.group(1).strip()
+        if state_match and state is None:
+            state = state_match.group(1).upper()
     linkedin = next((url.rstrip(".,;") for url in urls if re.search(r"^https?://(?:www\.)?linkedin\.com/", url, re.I)), None)
     github = next((url.rstrip(".,;") for url in urls if re.search(r"^https?://(?:www\.)?github\.com/", url, re.I)), None)
     portfolio_match = re.search(r"\bportf[oó]lio\s*:\s*(https?://[^\s<>]+)", text, re.I)
@@ -95,7 +105,7 @@ def parse_candidate_profile(pdf_content: bytes, profile_id: str, original_path: 
     return CandidateProfile(
         id=profile_id,
         original_resume_path=str(original_path),
-        personal=ResumePersonalDetails(name=name, headline=headline, email=email_match.group() if email_match else None, phone=phone, linkedin=linkedin, github=github, portfolio=portfolio),
+        personal=ResumePersonalDetails(name=name, headline=headline, city=city, state=state, email=email_match.group() if email_match else None, phone=phone, linkedin=linkedin, github=github, portfolio=portfolio),
         professional_summary=" ".join(sections.get("summary", [])) or None,
         technical_skills=[TechnicalSkillGroup(category=category, items=items) for category, items in skills_by_category.items()],
         experiences=_structured_entries(sections.get("experience", []), "experience"),

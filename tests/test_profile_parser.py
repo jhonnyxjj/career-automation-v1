@@ -134,3 +134,30 @@ def test_digits_in_email_or_link_are_not_extracted_as_phone(monkeypatch):
             self.pages = [Page()]
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
     assert parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal.phone is None
+
+
+def test_extracts_explicit_city_and_state(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return "Pessoa Exemplo\nCidade: Petrópolis\nUF: RJ\nExperiência\nDesenvolvedor | Empresa | 2020-2024"
+    class Reader:
+        is_encrypted = False
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    personal = parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal
+    assert (personal.city, personal.state) == ("Petrópolis", "RJ")
+    assert personal.headline is None
+
+
+def test_does_not_infer_city_from_experience(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return "Pessoa Exemplo\nExperiência\nCidade: Petrópolis\nUF: RJ"
+    class Reader:
+        is_encrypted = False
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    personal = parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal
+    assert personal.city is None and personal.state is None
