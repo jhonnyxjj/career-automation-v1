@@ -192,3 +192,18 @@ def test_does_not_invent_missing_fields_in_dash_separated_experience(monkeypatch
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
     profile = parse_candidate_profile(b"fake", "id", Path("original.pdf"))
     assert profile.experiences == []
+
+
+def test_bullet_after_incomplete_experience_is_not_assigned_to_previous_one(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return ("Pessoa Exemplo\nExperiência\nDev | Empresa A | 2020-2021\n- Atividade A\n"
+                    "Dev | Empresa B\n- Atividade B")
+    class Reader:
+        is_encrypted = False
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    profile = parse_candidate_profile(b"fake", "id", Path("original.pdf"))
+    assert len(profile.experiences) == 1
+    assert profile.experiences[0].bullets == ["Atividade A"]

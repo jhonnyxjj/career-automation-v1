@@ -36,17 +36,22 @@ def _sections(lines: list[str]) -> dict[str, list[str]]:
 
 def _structured_entries(lines: list[str], kind: str) -> list:
     entries = []
+    current = None
     for line in lines:
-        if line.startswith(("- ", "• ", "* ")) and entries and kind != "education":
-            entries[-1].bullets.append(line[2:].strip())
+        if line.startswith(("- ", "• ", "* ")):
+            if current is not None and kind != "education":
+                current.bullets.append(line[2:].strip())
             continue
         fields = [part.strip() for part in re.split(r"\||\s+[–—]\s+", line)]
+        current = None
         if kind == "experience" and len(fields) == 3 and all(fields):
-            entries.append(ResumeExperience(position=fields[0], company=fields[1], period=fields[2]))
+            current = ResumeExperience(position=fields[0], company=fields[1], period=fields[2])
         elif kind == "education" and len(fields) == 3 and all(fields):
-            entries.append(ResumeEducation(course=fields[0], institution=fields[1], period=fields[2]))
-        elif kind == "projects" and len(fields) in {1, 2} and fields[0] and not line.startswith(("- ", "• ", "* ")):
-            entries.append(ResumeProject(name=fields[0], context=fields[1] if len(fields) == 2 and fields[1] else None))
+            current = ResumeEducation(course=fields[0], institution=fields[1], period=fields[2])
+        elif kind == "projects" and len(fields) in {1, 2} and fields[0]:
+            current = ResumeProject(name=fields[0], context=fields[1] if len(fields) == 2 and fields[1] else None)
+        if current is not None:
+            entries.append(current)
     return entries
 
 
