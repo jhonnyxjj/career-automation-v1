@@ -69,3 +69,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `bacf6bd` rejeita `localhost`, nomes `.local`, endereços privados literais e formas numéricas alternativas nos links manuais de origem e candidatura. O backend não busca esses links; a validação não resolve DNS e não garante que um domínio aponte para endereço público.
 - Verificações: 163 testes Python com lockfile e Ruff focado passaram; testes cobrem os dois campos, IPv4/IPv6, formas alternativas e resposta HTTP 422. A suíte emitiu aviso de depreciação Starlette/httpx.
 - Próxima ação: revisar os critérios restantes de P1 e a apresentação de falhas no navegador; sincronizar o status no Notion apenas após comprovar o aceite. Nenhum push foi feito.
+
+### Incremento P1 — localidades não reconhecidas
+
+- `fbce015` encaminha localidades não reconhecidas para revisão, incluindo no fluxo de busca, e evita identificar siglas de região dentro de outras palavras. Localidades reconhecidas fora das preferências continuam rejeitadas; a lista de regiões ainda é limitada e restrições geográficas complexas precisam de revisão.
+- Verificações: 169 testes Python com lockfile e Ruff focado passaram; houve aviso de depreciação Starlette/httpx. Antes deste incremento, dois testes E2E passaram no Compose isolado com dados sintéticos; eles não foram repetidos após a alteração do filtro.
+- Próxima ação: revisar restrições geográficas ambíguas e os demais critérios de P1; depois seguir P2, P4, P3 e P5. P1–P5 ainda não têm aceite comprovado. O último run remoto conhecido da CI falhou e as correções locais não foram publicadas. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
