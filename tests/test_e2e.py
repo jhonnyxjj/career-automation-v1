@@ -2,6 +2,7 @@ from io import BytesIO
 import shutil
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 from pypdf import PdfWriter
 from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
@@ -104,6 +105,30 @@ def test_password_protected_pdf_is_rejected_without_leaving_a_file(monkeypatch, 
 
     assert response.status_code == 422
     assert not list((tmp_path / "resumes" / "original").glob("*.pdf"))
+
+
+@pytest.mark.parametrize('invalid_kind', ['truncated', 'blank'])
+def test_unreadable_pdf_preserves_current_profile_and_original(monkeypatch, tmp_path, invalid_kind):
+    monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr(profile_store, "RESUMES_DIR", tmp_path / "resumes")
+    original = _synthetic_pdf()
+    writer = PdfWriter()
+    writer.add_blank_page(width=612, height=792)
+    blank = BytesIO()
+    writer.write(blank)
+    invalid = original[:len(original) // 2] if invalid_kind == 'truncated' else blank.getvalue()
+
+    with TestClient(api.app) as client:
+        profile = client.post('/profiles/upload', files={'file': ('original.pdf', original, 'application/pdf')}).json()['profile']
+        assert client.post(f"/profile/{profile['id']}/confirm", json=profile).status_code == 200
+        response = client.post('/profiles/upload', files={'file': ('invalid.pdf', invalid, 'application/pdf')})
+        assert response.status_code == 422
+        assert client.get('/profile/current').json()['id'] == profile['id']
+
+    originals = tmp_path / 'resumes' / 'original'
+    assert list(originals.glob('*.pdf')) == [originals / f"{profile['id']}.pdf"]
+    assert (originals / f"{profile['id']}.pdf").read_bytes() == original
 
 
 class FixtureSource(BaseSource):
