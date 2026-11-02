@@ -63,3 +63,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `3c25286` amplia o filtro de requisitos explícitos para staff, lead e arquiteto, preservando nos testes as menções a colegas. Três requisitos eram aceitos antes da mudança e foram corrigidos.
 - Verificações: 134 testes Python e lint Ruff focado passaram com dependências travadas. A identificação continua heurística e não reconhece todas as formulações ou contextos possíveis.
 - Próxima ação: concluir a revisão de P1, em especial riscos de falsa classificação e tratamento de erros de interface; não alterar o status no Notion até comprovar os critérios da fase. A CI remota das alterações locais ainda depende de push solicitado pelo usuário.
+
+### Incremento P1 — links de importação
+
+- `bacf6bd` rejeita `localhost`, nomes `.local`, endereços privados literais e formas numéricas alternativas nos links manuais de origem e candidatura. O backend não busca esses links; a validação não resolve DNS e não garante que um domínio aponte para endereço público.
+- Verificações: 163 testes Python com lockfile e Ruff focado passaram; testes cobrem os dois campos, IPv4/IPv6, formas alternativas e resposta HTTP 422. A suíte emitiu aviso de depreciação Starlette/httpx.
+- Próxima ação: revisar os critérios restantes de P1 e a apresentação de falhas no navegador; sincronizar o status no Notion apenas após comprovar o aceite. Nenhum push foi feito.
