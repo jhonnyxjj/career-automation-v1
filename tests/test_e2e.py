@@ -62,6 +62,44 @@ class FixtureSource(BaseSource):
         return FetchResult(report=SourceReport(source=self.name, status=SourceStatus.OK, count=1), jobs=[job, job])
 
 
+def test_search_integrates_filters_deduplication_and_source_failure(monkeypatch, tmp_path):
+    class SearchSource(BaseSource):
+        name = "Synthetic"
+
+        async def fetch(self, client):
+            common = dict(source=self.name, company="Empresa fictícia", description="Backend TypeScript Node.js", workplace_type="remote")
+            valid = RawJob(**common, title="Junior Backend Developer", url="https://example.com/valid", location="Brazil")
+            unknown = RawJob(**common, title="Junior Backend Developer", url="https://example.com/unknown", location="Remote")
+            senior = RawJob(**common, title="Senior Backend Developer", url="https://example.com/senior", location="Brazil")
+            hybrid = RawJob(**(common | {"workplace_type": "hybrid"}), title="Junior Backend Developer", url="https://example.com/hybrid", location="Rio de Janeiro, Brazil")
+            return FetchResult(report=SourceReport(source=self.name, status=SourceStatus.OK, count=5), jobs=[valid, valid, unknown, senior, hybrid])
+
+    class FailingSource(BaseSource):
+        name = "Unavailable"
+
+        async def fetch(self, client):
+            raise RuntimeError("synthetic failure")
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr(api, "default_sources", lambda: [SearchSource(), FailingSource()])
+    with TestClient(api.app) as client:
+        uploaded = client.post('/profiles/upload', files={'file': ('resume.pdf', _synthetic_pdf(), 'application/pdf')})
+        assert uploaded.status_code == 200
+        profile_id = uploaded.json()['profile']['id']
+        response = client.post('/jobs/search', json={'profile_id': profile_id, 'regions': ['brazil', 'global'], 'work_modes': ['remote']})
+
+    assert response.status_code == 200
+    result = response.json()
+    assert [job['url'] for job in result['jobs']] == ['https://example.com/valid']
+    assert result['jobs'][0]['score'] > 0
+    assert [(item['job']['url'], item['reason']) for item in result['needs_review']] == [('https://example.com/unknown', 'REGION_UNKNOWN')]
+    assert result['stats']['collected'] == 5
+    assert result['stats']['unique'] == 4
+    assert [report['status'] for report in result['reports']] == ['OK', 'ERROR']
+
+
 def test_resume_search_application_and_tailoring_flow(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
