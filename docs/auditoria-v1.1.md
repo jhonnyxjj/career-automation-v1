@@ -93,3 +93,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `545b67a` evita interpretar períodos de formação como telefone: busca números plausíveis no cabeçalho, antes das seções, sem concatenar linhas. O erro com `2020-2024` foi reproduzido antes da correção; um telefone brasileiro formatado também foi testado.
 - Verificações: 177 testes Python com lockfile e Ruff focado passaram; permanece aviso de depreciação Starlette/httpx. Números fora do cabeçalho, na mesma linha de e-mail/link ou com menos de dez dígitos podem exigir correção manual. Os testes usam texto sintético e extração de PDF simulada, não PDFs variados.
 - Próxima ação: ampliar e validar a extração de P2 com currículos sintéticos representativos, além de concluir a validação da P1; seguir P4, P3 e P5. A CI remota continua pendente de publicação autorizada. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
+
+### Incremento P2 — PDF protegido por senha
+
+- `690cc86` rejeita PDFs criptografados com resposta HTTP 422 e orientação para enviar uma cópia desbloqueada. Um teste de integração gerou um PDF protegido sintético e comprovou que o arquivo rejeitado é removido; antes da mudança, uma exceção escapava da API e o upload permanecia no disco. Erros `PdfReadError` durante a extração de páginas também são convertidos em erro de leitura.
+- Verificações: 178 testes Python com lockfile e Ruff focado passaram; permanece aviso de depreciação Starlette/httpx. O teste cobre a API, não a apresentação de erro no navegador; PDFs protegidos, inclusive os que podem ter senha vazia, precisam ser desbloqueados antes do envio.
+- Próxima ação: validar os demais cenários da P2 com PDFs sintéticos representativos e as falhas na interface; continuar a validação de P1 e as fases P4, P3 e P5. Não atualizar o Notion para concluído sem aceite, nem fazer push automático. Preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
