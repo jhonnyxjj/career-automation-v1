@@ -12,10 +12,13 @@ from career.models import FetchResult, RawJob, SourceReport, SourceStatus
 from career.sources.base import BaseSource
 
 
-def _synthetic_pdf(content: bytes = b'BT /F1 14 Tf 72 720 Td (Pessoa Teste Backend Junior Node.js TypeScript) Tj ET') -> bytes:
+def _synthetic_pdf(content: bytes = b'BT /F1 14 Tf 72 720 Td (Pessoa Teste Backend Junior Node.js TypeScript) Tj ET', *, win_ansi: bool = False) -> bytes:
     writer = PdfWriter()
     page = writer.add_blank_page(width=612, height=792)
-    font = writer._add_object(DictionaryObject({NameObject('/Type'): NameObject('/Font'), NameObject('/Subtype'): NameObject('/Type1'), NameObject('/BaseFont'): NameObject('/Helvetica')}))
+    font_data = DictionaryObject({NameObject('/Type'): NameObject('/Font'), NameObject('/Subtype'): NameObject('/Type1'), NameObject('/BaseFont'): NameObject('/Helvetica')})
+    if win_ansi:
+        font_data[NameObject('/Encoding')] = NameObject('/WinAnsiEncoding')
+    font = writer._add_object(font_data)
     page[NameObject('/Resources')] = DictionaryObject({NameObject('/Font'): DictionaryObject({NameObject('/F1'): font})})
     stream = DecodedStreamObject()
     stream.set_data(content)
@@ -92,6 +95,25 @@ def test_multipage_text_pdf_extracts_sections_across_pages(monkeypatch, tmp_path
     assert profile['experiences'][0]['company'] == 'Empresa'
     assert profile['experiences'][0]['bullets'] == ['Criou APIs.']
     assert profile['education'][0]['institution'] == 'Universidade'
+
+
+def test_upload_extracts_dash_separated_entries_from_text_pdf(monkeypatch, tmp_path):
+    monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path / "resumes")
+    content = (
+        b'BT /F1 14 Tf 72 720 Td (Pessoa Teste) Tj 0 -20 Td (Experiencia) Tj 0 -20 Td '
+        b'(Desenvolvedora \227 Empresa \227 2021-2024) Tj 0 -20 Td (Formacao) Tj 0 -20 Td '
+        b'(Computacao \227 Universidade \227 2017-2021) Tj ET'
+    )
+    pdf = _synthetic_pdf(content, win_ansi=True)
+
+    with TestClient(api.app) as client:
+        response = client.post('/profiles/upload', files={'file': ('resume.pdf', pdf, 'application/pdf')})
+
+    assert response.status_code == 200
+    profile = response.json()['profile']
+    assert (profile['experiences'][0]['position'], profile['experiences'][0]['company'], profile['experiences'][0]['period']) == ('Desenvolvedora', 'Empresa', '2021-2024')
+    assert (profile['education'][0]['course'], profile['education'][0]['institution'], profile['education'][0]['period']) == ('Computacao', 'Universidade', '2017-2021')
 
 
 def test_replacing_resume_preserves_both_originals_and_confirmed_profiles(monkeypatch, tmp_path):
