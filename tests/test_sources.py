@@ -102,6 +102,15 @@ def test_remotinho_extracts_public_listing_and_destination_url():
     assert result.jobs[0].apply_url == "https://jobs.example.com/1"
 
 
+def test_remotinho_ignores_link_without_href():
+    from career.sources.remotinho import _JobsParser
+
+    parser = _JobsParser()
+    parser.feed('<h3 class="font-size-6 mb-3">Backend Junior</h3><a>Sem link</a><a href="/job/fixture">Ver vaga</a>')
+    assert len(parser.jobs) == 1
+    assert parser.jobs[0]['path'] == '/job/fixture'
+
+
 def test_greenhouse_update_timestamp_is_not_used_as_publication_date(monkeypatch):
     from career.config.sources import SourceTarget
     from career.sources.greenhouse import GreenhouseSource

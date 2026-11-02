@@ -42,7 +42,7 @@ class _JobsParser(HTMLParser):
         elif tag == "p" and self.current.get("title") and "font-size-4 text-gray mb-4" in class_name:
             self.current["description"] = ""
             self.capture = "description"
-        elif tag == "a" and self.current.get("title") and (href := attributes.get("href", "")).startswith("/job/"):
+        elif tag == "a" and self.current.get("title") and (href := attributes.get("href") or "").startswith("/job/"):
             self.current["path"] = href
             self.jobs.append(self.current)
             self.current = {}
