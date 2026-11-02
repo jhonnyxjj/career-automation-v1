@@ -117,3 +117,28 @@ def test_greenhouse_update_timestamp_is_not_used_as_publication_date(monkeypatch
     result = asyncio.run(fetch())
     assert result.report.status == SourceStatus.OK
     assert result.jobs[0].published_at is None
+
+
+def test_greenhouse_reports_rate_limited_board_without_losing_other_jobs(monkeypatch):
+    from career.config.sources import SourceTarget
+    from career.sources.greenhouse import GreenhouseSource
+
+    monkeypatch.setattr('career.sources.greenhouse._targets_from_settings', lambda *_: (
+        SourceTarget('limited', 'Limitada'), SourceTarget('available', 'Disponível'),
+    ))
+    calls = []
+    def handler(request):
+        calls.append(request.url.path)
+        if '/limited/' in request.url.path:
+            return httpx.Response(429, headers={'Retry-After': '30'})
+        return httpx.Response(200, json={'jobs': [{'id': 1, 'title': 'Backend Junior', 'absolute_url': 'https://example.com/job'}]})
+
+    async def fetch():
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            return await GreenhouseSource().fetch(client)
+
+    result = asyncio.run(fetch())
+    assert result.report.status == SourceStatus.OK
+    assert result.report.message == '1/2 boards failed'
+    assert result.report.count == 1 and result.jobs[0].company == 'Disponível'
+    assert len(calls) == 2
