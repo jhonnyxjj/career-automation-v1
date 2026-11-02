@@ -3,7 +3,7 @@
 ## Fontes e início de trabalho
 
 - A especificação vigente é https://app.notion.com/p/40a27698d6818190bb0dc7eec7c7d489 e o quadro é https://app.notion.com/p/5cefab2cb8044bf2be9474a0baea3fff. Consulte-os quando acessíveis e confira o código antes de presumir status; links, por si só, não concedem acesso.
-- Antes de alterar arquivos, inspecione `git status`, histórico e diffs relevantes, leia `.agents/memory.md`, `CONTINUIDADE.md` quando existir e as instruções mais específicas do diretório, inclusive `web/AGENTS.md`. Preserve alterações preexistentes e dados pessoais.
+- Antes de alterar arquivos, inspecione `git status`, histórico e diffs relevantes, leia `.agents/memory.md`, `CONTINUIDADE.md` quando existir, `docs/auditoria-v1.1.md` e as instruções mais específicas do diretório, inclusive `web/AGENTS.md`. Compare datas e evidências se os relatórios divergirem. Preserve alterações preexistentes e dados pessoais.
 - Compare tarefas e critérios de aceite com implementação, testes e resultados observados. Atualize status no Notion somente quando seus critérios estiverem comprovados. Se o Notion estiver indisponível, registre evidências e pendências localmente para sincronização posterior.
 - Escolha o próximo incremento pelo backlog aprovado, prioridades e dependências. Para trabalho de várias etapas, apresente plano conciso com verificação e riscos; siga autonomamente quando houver autorização do usuário. Peça aprovação para operações destrutivas, deploy público, mudanças significativas de arquitetura ou quando exigida por instrução aplicável.
 

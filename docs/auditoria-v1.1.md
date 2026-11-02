@@ -33,3 +33,10 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - P1 permanece em Backlog até revisar os casos ambíguos de região e validar integralmente os demais critérios. A próxima tarefa é continuar essa revisão e então avançar ao parser de P2. A CI ainda precisa ser observada remotamente após publicação autorizada.
 
 - **Filtro de área:** `2cdfb4f` corrige um falso positivo em que título explicitamente frontend era aceito por mencionar backend na descrição. O cenário falhou antes da correção; após ela, a suíte com lockfile passou com 108 testes e o lint Python focado passou. Próximo passo: revisar ambiguidades restantes de P1 e, em seguida, o parser de P2.
+
+### Retomada mais recente — 2026-11-02
+
+- `9274f78` impede que localizações que excluem o Brasil com “outside” ou “fora” sejam aceitas por conter seu nome; restrições na descrição ficam para revisão. O cenário falhou antes e passou depois. Suíte final: 112 testes Python e lint Ruff focado aprovados; houve um aviso de depreciação Starlette/httpx.
+- **Próxima ação:** continuar P1 revisando outras expressões e combinações geográficas, sem presumir elegibilidade; depois seguir P2 e P4. P1–P5 continuam em Backlog no Notion porque seus critérios ainda não foram integralmente comprovados.
+- **CI e publicação:** o último run remoto do commit `2a74073` falhou no typecheck frontend; `59816a1` corrige o problema e passou em cópia limpa local, mas os commits posteriores ainda não foram enviados nem executados no GitHub. Não fazer push sem solicitação explícita.
+- **Estado local:** preservar a modificação anterior em `.agents/memory.md` e o arquivo não rastreado `CONTINUIDADE.md`. Este registro é mais recente que aquele relatório. Os serviços principais em execução ainda correspondem à imagem anterior; as mudanças novas foram verificadas em containers e dados sintéticos isolados.
