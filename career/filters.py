@@ -36,7 +36,8 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
     if job.workplace_type not in profile.allowed_workplaces:
         return FilterResult(accepted=False, reason="WORKPLACE_NOT_ALLOWED")
     if profile.allowed_regions:
-        if not job.location:
+        location = normalized_text(job.location).strip(" -/(),")
+        if not location or location in {"remote", "remoto", "home office", "work from home"}:
             return FilterResult(accepted=False, reason="REGION_UNKNOWN")
         if not _matches_region(job, profile.allowed_regions):
             return FilterResult(accepted=False, reason="REGION_NOT_ALLOWED")

@@ -97,3 +97,9 @@ def test_locations_excluding_brazil_do_not_match_brazil(location):
 def test_global_jobs_with_brazil_exclusion_in_description_need_review(description):
     profile = javascript_profile(allowed_regions={'brazil', 'global'})
     assert hard_filter(job(location='Worldwide', description=description), profile).reason == 'REGION_UNKNOWN'
+
+
+@pytest.mark.parametrize('location', ['Remote', 'Remoto', 'Home office', 'Work from home', '(Remote)', '   '])
+def test_work_mode_alone_does_not_imply_a_known_region(location):
+    profile = javascript_profile(allowed_regions={'brazil', 'global'})
+    assert hard_filter(job(location=location), profile).reason == 'REGION_UNKNOWN'

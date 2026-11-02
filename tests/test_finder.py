@@ -47,6 +47,19 @@ def test_unknown_location_is_separate_from_eligible_jobs():
     assert result.needs_review[0].reason == "REGION_UNKNOWN"
 
 
+def test_remote_only_location_is_returned_for_review():
+    class RemoteOnlySource(GoodSource):
+        async def fetch(self, client):
+            result = await super().fetch(client)
+            result.jobs[0].location = "Remote"
+            return result
+
+    result = asyncio.run(find_jobs(javascript_profile(allowed_regions={"brazil", "global"}), [RemoteOnlySource()], limit=20))
+    assert result.jobs == []
+    assert len(result.needs_review) == 1
+    assert result.needs_review[0].reason == "REGION_UNKNOWN"
+
+
 def test_slow_source_times_out_without_stopping_other_sources(monkeypatch):
     class SlowSource(BaseSource):
         name = "Slow"
