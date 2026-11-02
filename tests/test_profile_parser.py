@@ -59,3 +59,25 @@ def test_page_number_is_not_a_headline(monkeypatch):
             self.pages = [Page()]
     monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
     assert parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal.headline is None
+
+
+def test_education_dates_are_not_extracted_as_a_phone_number(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return "Pessoa Exemplo\nFormação\nComputação | Universidade | 2020-2024"
+    class Reader:
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    assert parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal.phone is None
+
+
+def test_extracts_formatted_phone_number(monkeypatch):
+    class Page:
+        def extract_text(self):
+            return "Pessoa Exemplo\n+55 (21) 99999-1234\nFormação\nComputação | Universidade | 2020-2024"
+    class Reader:
+        def __init__(self, _):
+            self.pages = [Page()]
+    monkeypatch.setattr("career.profile_parser.PdfReader", Reader)
+    assert parse_candidate_profile(b"fake", "id", Path("original.pdf")).personal.phone == "+55 (21) 99999-1234"

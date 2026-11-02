@@ -67,7 +67,18 @@ def parse_candidate_profile(pdf_content: bytes, profile_id: str, original_path: 
         if re.search(r"[A-Za-zÀ-ÿ]", candidate) and "@" not in candidate and "http" not in candidate.lower() and not re.search(r"\d{5,}", candidate) and normalized_text(candidate.rstrip(":")) not in SECTION_NAMES:
             headline = candidate[:160]
     email_match = re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
-    phone_match = re.search(r"(?:\+?\d[\d\s().-]{7,}\d)", text)
+    phone = None
+    for line in lines:
+        if normalized_text(line.rstrip(":")) in SECTION_NAMES:
+            break
+        if "@" in line or "http" in line.lower():
+            continue
+        for match in re.finditer(r"\+?\d[\d ().-]{7,}\d", line):
+            if 10 <= len(re.sub(r"\D", "", match.group())) <= 15:
+                phone = match.group()
+                break
+        if phone:
+            break
     urls = re.findall(r"https?://[^\s<>]+", text)
     linkedin = next((url.rstrip(".,;") for url in urls if re.search(r"^https?://(?:www\.)?linkedin\.com/", url, re.I)), None)
     github = next((url.rstrip(".,;") for url in urls if re.search(r"^https?://(?:www\.)?github\.com/", url, re.I)), None)
@@ -81,7 +92,7 @@ def parse_candidate_profile(pdf_content: bytes, profile_id: str, original_path: 
     return CandidateProfile(
         id=profile_id,
         original_resume_path=str(original_path),
-        personal=ResumePersonalDetails(name=name, headline=headline, email=email_match.group() if email_match else None, phone=phone_match.group() if phone_match else None, linkedin=linkedin, github=github),
+        personal=ResumePersonalDetails(name=name, headline=headline, email=email_match.group() if email_match else None, phone=phone, linkedin=linkedin, github=github),
         professional_summary=" ".join(sections.get("summary", [])) or None,
         technical_skills=[TechnicalSkillGroup(category=category, items=items) for category, items in skills_by_category.items()],
         experiences=_structured_entries(sections.get("experience", []), "experience"),
