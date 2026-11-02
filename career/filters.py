@@ -73,7 +73,7 @@ def _matches_role_area(text: str, allowed_areas: set[str]) -> bool:
 
 def _matches_region(job: JobListing, allowed_regions: set[str]) -> bool:
     location = normalized_text(job.location)
-    if re.search(r"\b(except|excluding|excluded|not|exceto|excluindo|nao)\b", location):
+    if re.search(r"\b(except|excluding|excluded|not|outside|exceto|excluindo|nao|fora)\b", location):
         return False
     aliases = {
         "brazil": ("brazil", "brasil", "rio de janeiro", "petropolis"),
@@ -94,5 +94,5 @@ def _matches_region(job: JobListing, allowed_regions: set[str]) -> bool:
 def _has_geographic_restriction(description: str | None) -> bool:
     value = normalized_text(description)
     region = r"\b(?:brazil|brasil|us|usa|united states|estados unidos|canada|europe|europa|uk|united kingdom|reino unido)\b"
-    restriction = r"\b(?:only|restricted|excluding|except|must be based|must reside|exclusiv[oa]s?|apenas|somente|exceto|residentes)\b"
+    restriction = r"\b(?:only|restricted|excluding|except|outside|must be based|must reside|exclusiv[oa]s?|apenas|somente|exceto|fora|residentes)\b"
     return bool(re.search(rf"(?:{region}[^.;]{{0,100}}{restriction}|{restriction}[^.;]{{0,100}}{region})", value))

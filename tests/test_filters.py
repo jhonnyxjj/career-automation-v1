@@ -85,3 +85,15 @@ def test_unknown_values_and_unmatched_area_are_not_eligible():
     assert hard_filter(job(title="Software Engineer", description="Software developer", location="Brazil"), profile).reason == "ROLE_AREA_UNKNOWN"
     backend_profile = javascript_profile(role_areas={"backend"})
     assert hard_filter(job(title="Frontend Developer", description="Frontend software developer"), backend_profile).reason == "ROLE_AREA_NOT_ALLOWED"
+
+
+@pytest.mark.parametrize('location', ['Remote outside Brazil', 'Remoto fora do Brasil'])
+def test_locations_excluding_brazil_do_not_match_brazil(location):
+    profile = javascript_profile(allowed_regions={'brazil', 'global'})
+    assert hard_filter(job(location=location), profile).reason == 'REGION_NOT_ALLOWED'
+
+
+@pytest.mark.parametrize('description', ['Backend developer. Applicants outside Brazil.', 'Desenvolvedor backend. Candidatos fora do Brasil.'])
+def test_global_jobs_with_brazil_exclusion_in_description_need_review(description):
+    profile = javascript_profile(allowed_regions={'brazil', 'global'})
+    assert hard_filter(job(location='Worldwide', description=description), profile).reason == 'REGION_UNKNOWN'
