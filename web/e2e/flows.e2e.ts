@@ -8,10 +8,29 @@ test("profile, import, application and tailored resume survive a refresh", async
   await expect(page.getByRole("heading", { name: "Revise e confirme seu perfil" })).toBeVisible();
   await page.getByLabel("Nome", { exact: true }).fill("Pessoa Teste E2E");
   await page.getByLabel("Tecnologias (separadas por vírgula)").fill("TypeScript, Node.js");
+  await page.getByRole("button", { name: "Adicionar experiência" }).click();
+  const experience = page.getByRole("button", { name: "Remover experiência" }).locator("..");
+  await experience.getByLabel("Cargo").fill("Desenvolvedora");
+  await experience.getByLabel("Empresa").fill("Empresa Confirmada");
+  await experience.getByLabel("Período").fill("2021-2024");
+  await experience.getByLabel("Atividades (uma por linha)").fill("Criou APIs em TypeScript");
+  await page.getByRole("button", { name: "Adicionar projeto" }).click();
+  const project = page.getByRole("button", { name: "Remover projeto" }).locator("..");
+  await project.getByLabel("Nome").fill("Projeto Confirmado");
+  await page.getByRole("button", { name: "Adicionar formação" }).click();
+  const education = page.getByRole("button", { name: "Remover formação" }).locator("..");
+  await education.getByLabel("Curso").fill("Computação");
+  await education.getByLabel("Instituição").fill("Universidade Confirmada");
+  await education.getByLabel("Período").fill("2017-2021");
   await page.getByRole("button", { name: "Salvar e confirmar" }).click();
   await expect(page.getByText("Perfil salvo e confirmado.")).toBeVisible();
   await page.reload();
   await expect(page.getByText("Pessoa Teste E2E")).toBeVisible();
+  await page.getByRole("button", { name: "Editar perfil" }).click();
+  await expect(page.getByLabel("Empresa", { exact: true })).toHaveValue("Empresa Confirmada");
+  await expect(page.getByLabel("Instituição")).toHaveValue("Universidade Confirmada");
+  await expect(page.getByRole("button", { name: "Remover projeto" }).locator("..").getByLabel("Nome")).toHaveValue("Projeto Confirmado");
+  await page.getByRole("button", { name: "Cancelar", exact: true }).click();
 
   await page.getByRole("button", { name: "Importar vaga ou post" }).click();
   await page.getByLabel("Cargo").fill("Backend Developer Junior");
@@ -42,7 +61,8 @@ test("profile, import, application and tailored resume survive a refresh", async
   expect((await pdfResponse.body()).subarray(0, 5).toString()).toBe("%PDF-");
   const texUrl = await page.getByRole("link", { name: "Baixar .tex" }).getAttribute("href") as string;
   const texResponse = await page.request.get(texUrl);
-  expect(await texResponse.text()).toContain("Pessoa Teste E2E");
+  const tex = await texResponse.text();
+  for (const fact of ["Pessoa Teste E2E", "Empresa Confirmada", "Projeto Confirmado", "Universidade Confirmada"]) expect(tex).toContain(fact);
   await page.getByRole("button", { name: "Close" }).click();
   await page.route("**/resumes/tailor", (route) => route.request().method() === "OPTIONS"
     ? route.continue()
