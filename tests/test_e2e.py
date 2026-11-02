@@ -140,6 +140,29 @@ def test_replacing_resume_preserves_both_originals_and_confirmed_profiles(monkey
     assert (originals / f"{second['id']}.pdf").read_bytes() == second_pdf
 
 
+def test_tailored_resume_uses_confirmed_facts_without_adding_job_requirements(monkeypatch, tmp_path):
+    monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr(profile_store, "RESUMES_DIR", tmp_path / "resumes")
+    with TestClient(api.app) as client:
+        profile = client.post('/profiles/upload', files={'file': ('resume.pdf', _synthetic_pdf(), 'application/pdf')}).json()['profile']
+        profile['personal']['name'] = 'Pessoa Confirmada'
+        profile['technical_skills'] = [{'category': 'Linguagens', 'items': ['Python']}]
+        profile['experiences'] = [{'company': 'Empresa Real', 'position': 'Desenvolvedora', 'period': '2020-2022', 'bullets': ['Criou APIs em Python']}]
+        profile['projects'] = [{'name': 'Projeto Real', 'technologies': ['Python'], 'bullets': ['Criou testes']}]
+        profile['education'] = [{'institution': 'Universidade Real', 'course': 'Computacao', 'period': '2016-2020'}]
+        assert client.post(f"/profile/{profile['id']}/confirm", json=profile).status_code == 200
+        vacancy = {'source': 'Teste', 'title': 'Backend Kotlin', 'company': 'Empresa', 'url': 'https://example.com/vacancy',
+                   'description': 'Kotlin e Kubernetes obrigatorios', 'technologies': ['Kotlin', 'Kubernetes']}
+        result = client.post('/resumes/tailor', json={'profile_id': profile['id'], 'job': vacancy})
+        assert result.status_code == 200
+        document = client.get(f"/resumes/{result.json()['id']}/download/tex")
+
+    assert document.status_code == 200
+    assert all(fact in document.text for fact in ['Pessoa Confirmada', 'Empresa Real', 'Projeto Real', 'Universidade Real', 'Python'])
+    assert 'Kotlin' not in document.text and 'Kubernetes' not in document.text
+
+
 def test_password_protected_pdf_is_rejected_without_leaving_a_file(monkeypatch, tmp_path):
     monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
     writer = PdfWriter()
