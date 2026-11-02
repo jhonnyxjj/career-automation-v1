@@ -1,5 +1,6 @@
 import asyncio
 import json
+from datetime import UTC, datetime
 
 import httpx
 
@@ -73,6 +74,14 @@ def test_primeira_vaga_tech_fetches_public_listing_details():
     assert result.jobs[0].description == "Vaga Python e FastAPI"
     assert result.jobs[0].apply_url == "https://careers.example.com/jobs/1"
     assert result.jobs[0].url == "https://www.primeiravagatech.com.br/vaga/backend-junior"
+
+
+def test_primeira_vaga_tech_preserves_publication_timezone():
+    from career.sources.primeiravagatech import _date
+
+    assert _date('2026-09-26T10:00:00-03:00') == datetime(2026, 9, 26, 13, tzinfo=UTC)
+    assert _date('2026-09-26T10:00:00Z') == datetime(2026, 9, 26, 10, tzinfo=UTC)
+    assert _date('2026-09-26') == datetime(2026, 9, 26, tzinfo=UTC)
 
 
 def test_remotinho_extracts_public_listing_and_destination_url():
