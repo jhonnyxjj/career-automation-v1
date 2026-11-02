@@ -183,3 +183,11 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - Um backup tar do volume sintético foi restaurado em volume vazio e lido por uma API isolada separada. Perfil, vaga, URL, score, situação, nota, favorita e histórico foram verificados; atualização repetida preservou histórico e timestamp. Testes existentes cobrem persistência de buscas, idempotência e corrupção de JSON.
 - Limitações: backup é manual, sem exportação na interface ou mesclagem; a trava de concorrência é de um processo. Os volumes `career-v11-synthetic-backup-20261102` e `career-v11-synthetic-restore-20261102` contêm somente dados de teste e foram preservados. Dados pessoais não foram usados.
 - Próxima ação: P3 — fixtures representativas das seis fontes manuais, deduplicação, falhas e limites de rede; depois P5. Não fazer push automático; preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
+
+### Aceite P3 — 2026-11-02
+
+- P3 foi marcada como Concluída no Notion e confirmada por releitura. `af2bd8c` testa seis exemplos sintéticos de importação manual; `cfa07d2` verifica deduplicação entre portais sem perder dados da candidatura; `3379035` cobre falha parcial por HTTP 429. As fontes automáticas complementares continuam no código.
+- `f5d29b2` corrige a identificação de “vaga remota”; `7cdc2b4` corrige o fuso de publicação no PrimeiraVagaTech; `caac1f5` corrige a duplicação da mesma vaga na lista de resultados. Os erros foram reproduzidos antes das correções.
+- Verificações: 208 testes Python e Ruff focado passaram; quatro testes Playwright, lint, typecheck e cinco testes frontend passaram com Compose isolado reconstruído. O teste especial de falha LaTeX foi ignorado na suíte normal e passou separadamente antes das alterações de P3.
+- Limitações: fixtures são sintéticas; disponibilidade real das fontes não foi exaustivamente verificada. Não há ingestão automática de alertas; 429 é reportado sem retry/backoff. Vagas idênticas com URLs e fingerprints diferentes podem não ser deduplicadas. A CI remota de `a408ad1` não cobre os commits locais posteriores.
+- Próxima ação: P5 — consolidar testes, build, segurança e documentação; não declarar a V1.1 pronta sem validar os fluxos críticos. Não fazer push automático; preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
