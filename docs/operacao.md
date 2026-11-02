@@ -43,6 +43,18 @@ docker compose -p career-v11-e2e -f compose.e2e.yaml down
 
 O volume de teste é separado de `.data/` e permanece após `down`. O teste de navegador cobre upload, confirmação e restauração, importação, acompanhamento, geração e downloads, além de falhas de PDF e rede. Os testes de API cobrem falhas de fontes, timeouts e indisponibilidade de LaTeX.
 
+Para testar a falha real do compilador e o download do `.tex` pela interface, use exclusivamente o Compose isolado de teste. O arquivo adicional monta um template propositalmente inválido somente no container de teste; execute o teste especial separadamente da suíte normal:
+
+```sh
+docker compose -p career-v11-e2e -f compose.e2e.yaml -f compose.e2e.latex-failure.yaml up -d --build
+cd web
+CAREER_E2E_BROKEN_LATEX=1 bunx playwright test e2e/pdf-failure.e2e.ts
+cd ..
+docker compose -p career-v11-e2e -f compose.e2e.yaml -f compose.e2e.latex-failure.yaml stop
+```
+
+Para voltar aos testes normais, inicie novamente o Compose isolado usando apenas `compose.e2e.yaml`; o container será recriado sem o template inválido. O teste especial fica desativado na suíte normal.
+
 ## Limitações conhecidas
 
 A ordenação prioriza estágio e júnior, depois o score e, em caso de empate, datas mais recentes. O score aplica uma penalidade de até cinco pontos quando reconhece uma menção explícita de 2–3 anos de experiência; a detecção é conservadora e pode não reconhecer outras formulações. Para vagas brasileiras presenciais ou híbridas, Rio de Janeiro e Petrópolis são reconhecidas; outras cidades não são configuráveis, e uma localização indicada apenas como Brasil é encaminhada para revisão. Vagas plenas sem linguagem explícita são encaminhadas para revisão. A seleção de origem e a importação são manuais, sem ingestão automática de alertas. Os testes de navegador não cobrem todas as combinações de fontes ou modalidades e não reiniciam o container automaticamente. O build da API usa `uv.lock`, mas a imagem base e pacotes do sistema não estão fixados por digest ou versão.

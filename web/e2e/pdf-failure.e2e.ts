@@ -1,0 +1,30 @@
+import { expect, test } from "@playwright/test";
+import path from "node:path";
+
+test("real compiler failure keeps the TeX download available", async ({ page }) => {
+  test.skip(process.env.CAREER_E2E_BROKEN_LATEX !== "1", "Requires the isolated broken LaTeX template described in docs/operacao.md");
+  await page.goto("/");
+  const replacement = page.getByText("Trocar currículo");
+  if (await replacement.isVisible()) await replacement.click();
+  await page.locator('input[type="file"]').first().setInputFiles(path.join(__dirname, "resume-fixture.pdf"));
+  await page.getByLabel("Nome", { exact: true }).fill("Pessoa Teste Falha PDF");
+  await page.getByRole("button", { name: "Salvar e confirmar" }).click();
+  await expect(page.getByText("Perfil salvo e confirmado.")).toBeVisible();
+  await page.getByRole("button", { name: "Importar vaga ou post" }).click();
+  await page.getByLabel("Cargo").fill("Backend Developer Junior");
+  await page.getByLabel("Empresa").fill("Empresa Teste Falha PDF");
+  await page.getByLabel("Descrição da vaga").fill("Backend junior remoto no Brasil com TypeScript.");
+  await page.getByLabel("URL da origem").fill(`https://example.com/latex-failure/${Date.now()}`);
+  await page.getByLabel("Localização (opcional)").fill("Brasil");
+  await page.getByRole("button", { name: "Analisar vaga" }).click();
+  const tracker = page.getByRole("region", { name: "Acompanhamento de vagas" });
+  await tracker.getByRole("button", { name: "Ver vaga e adaptar currículo" }).click();
+  await page.getByRole("button", { name: "Adaptar currículo", exact: true }).click();
+  await page.getByRole("button", { name: "Gerar currículo adaptado" }).click();
+  await expect(page.getByText("PDF indisponível. O arquivo .tex está disponível para download.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Baixar PDF" })).toHaveCount(0);
+  const texUrl = await page.getByRole("link", { name: "Baixar .tex" }).getAttribute("href") as string;
+  const response = await page.request.get(texUrl);
+  expect(response.ok()).toBe(true);
+  expect(await response.text()).toContain("Pessoa Teste Falha PDF");
+});

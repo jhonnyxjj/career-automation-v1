@@ -1,0 +1,5 @@
+# Use only with compose.e2e.yaml and its synthetic test volume.
+services:
+  api:
+    volumes:
+      - ./web/e2e/broken-template.tex:/app/career/templates/resume.tex:ro
