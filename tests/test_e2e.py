@@ -11,17 +11,32 @@ from career.models import FetchResult, RawJob, SourceReport, SourceStatus
 from career.sources.base import BaseSource
 
 
-def _synthetic_pdf() -> bytes:
+def _synthetic_pdf(content: bytes = b'BT /F1 14 Tf 72 720 Td (Pessoa Teste Backend Junior Node.js TypeScript) Tj ET') -> bytes:
     writer = PdfWriter()
     page = writer.add_blank_page(width=612, height=792)
     font = writer._add_object(DictionaryObject({NameObject('/Type'): NameObject('/Font'), NameObject('/Subtype'): NameObject('/Type1'), NameObject('/BaseFont'): NameObject('/Helvetica')}))
     page[NameObject('/Resources')] = DictionaryObject({NameObject('/Font'): DictionaryObject({NameObject('/F1'): font})})
     stream = DecodedStreamObject()
-    stream.set_data(b'BT /F1 14 Tf 72 720 Td (Pessoa Teste Backend Junior Node.js TypeScript) Tj ET')
+    stream.set_data(content)
     page[NameObject('/Contents')] = writer._add_object(stream)
     output = BytesIO()
     writer.write(output)
     return output.getvalue()
+
+
+def test_upload_extracts_labeled_portfolio_from_real_pdf(monkeypatch, tmp_path):
+    monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path / "resumes")
+    pdf = _synthetic_pdf(
+        b'BT /F1 14 Tf 72 720 Td (Pessoa Teste) Tj 0 -20 Td '
+        b'(Portfolio: https://example.com/pessoa) Tj ET'
+    )
+
+    with TestClient(api.app) as client:
+        response = client.post('/profiles/upload', files={'file': ('resume.pdf', pdf, 'application/pdf')})
+
+    assert response.status_code == 200
+    assert response.json()['profile']['personal']['portfolio'] == 'https://example.com/pessoa'
 
 
 def test_password_protected_pdf_is_rejected_without_leaving_a_file(monkeypatch, tmp_path):
