@@ -4,8 +4,8 @@ Atualizado em 2026-11-02. Este é um retrato para continuidade, não uma declara
 
 ## Estado de Git e cuidados
 
-- Repositório: `jhonnyxjj/career-automation-v1`, branch `main`. O último commit publicado é `a408ad1`; o último commit de código validado antes deste relatório é `caac1f5`. Confira `git status -sb` e `git log -10 --oneline` antes de continuar, pois há commits locais posteriores ao push.
-- `.agents/memory.md` estava modificada e `CONTINUIDADE.md` estava não rastreado antes deste trabalho. São alterações preexistentes: leia e preserve, sem reset, sobrescrita ou inclusão acidental em commits.
+- Repositório: `jhonnyxjj/career-automation-v1`, branch `main`. O último commit publicado é `a408ad1`; o último commit de código validado antes desta atualização é `17e56ac`. Confira `git status -sb` e `git log -10 --oneline` antes de continuar, pois há commits locais posteriores ao push.
+- `.agents/memory.md` e `CONTINUIDADE.md` eram alterações preexistentes; durante a execução, passaram a constar no commit `a4566bc`, criado fora destas entregas. Preserve seu conteúdo e confira o estado atual antes de editar.
 - Não versionar `.data/`, currículos, `.env`, credenciais ou backups. Não fazer push sem nova instrução. A aplicação principal pode estar em execução com imagens anteriores; um commit ou push não atualiza automaticamente seus containers.
 - A [CI do push `a408ad1`](https://github.com/jhonnyxjj/career-automation-v1/actions/runs/41459341087) terminou com sucesso: backend, frontend, Compose e navegador passaram. Os commits locais posteriores ainda não foram executados na CI remota.
 
@@ -18,15 +18,15 @@ Atualizado em 2026-11-02. Este é um retrato para continuidade, não uma declara
 | P2 — perfil e currículo | Upload, edição, confirmação, restauração, versões originais e adaptação validada com fatos confirmados; PDF/TeX e recuperação de falha real testados no navegador. Concluído no Notion após validação local de `f44a102`. | Extração estruturada reconhece formatos delimitados por `\|` e travessão com espaços; PDFs em colunas, digitalizados ou ambíguos podem exigir correção manual. Não há OCR. |
 | P4 — persistência e candidaturas | Perfil, buscas, vagas e funil persistidos; refresh, reinício real da API e restauração de backup sintético em API/volume separado foram validados, incluindo histórico e idempotência. Concluído no Notion. | Backup é manual, sem exportação na interface ou mesclagem; trava de concorrência é de um processo. Dados pessoais não foram usados nos testes. |
 | P3 — plataformas | Seis origens manuais testadas com exemplos sintéticos distintos; deduplicação entre portais validada em API e navegador; fontes complementares preservadas e falha parcial/429 testada. Concluído no Notion. | Sem ingestão automática de alertas ou retry/backoff de 429; disponibilidade real das fontes não foi exaustivamente verificada. Vagas idênticas com URLs e fingerprints diferentes podem não ser deduplicadas. Gupy/ProgramaThor automáticas aparecem como indisponíveis, não como coleta ativa. |
-| P5 — qualidade | Há pytest, lint focado, testes frontend, Playwright, CI, Docker e documentação. No estado `caac1f5`, 208 testes Python e Ruff passaram; quatro testes normais de navegador passaram e o teste especial de falha real passou separadamente antes da P3. | Testar commits locais em nova CI quando houver publicação autorizada. Typecheck Python não está configurado; faltam cenários reais de erro e validação integral dos fluxos críticos em ambiente limpo. Último status Notion observado: Backlog; reconfirme. |
+| P5 — qualidade | No estado `17e56ac`, uma cópia isolada dos arquivos versionados passou em 209 testes Python, mypy nos 34 arquivos, Ruff, sintaxe, lint/typecheck e cinco testes frontend, build Compose, quatro E2E normais e um E2E separado de falha real. Há `.env.example` e documentação de operação. Notion: Em Andamento. | A CI remota verde cobre apenas `a408ad1`; executar CI dos commits locais após publicação autorizada. Mypy usa configuração padrão, não estrita. A inspeção de logs com três marcadores sintéticos não prova ausência de PII em todos os caminhos. A cópia isolada não foi checkout Git integral. |
 
-P2, P4 e P3 foram confirmadas como Concluídas no Notion após as validações de 2026-11-02. O estado de P5 deve ser reconfirmado antes de alteração.
+P2, P4 e P3 foram confirmadas como Concluídas no Notion após as validações de 2026-11-02. P5 foi iniciada e permanece Em Andamento.
 
 ## Fluxos críticos
 
 - **A — currículo:** upload, edição, confirmação e refresh passaram em navegador; teste de API preserva dois PDFs ao trocar e rejeita PDF inválido sem perder o perfil. Falta ampliar PDFs/layouts e comprovar o conjunto completo em ambiente limpo.
 - **B — descoberta:** integração com fonte sintética verifica normalização, deduplicação, filtros, score, revisão e falha parcial; interface de busca usa resposta simulada no E2E. Faltam exemplos representativos por portal e observação das fontes reais permitidas.
-- **C — candidatura:** status, favorita e nota sobrevivem ao refresh no navegador; teste API usa novo cliente. Falta reforçar restauração após reinício de containers e backup restaurado.
+- **C — candidatura:** status, favorita e nota sobreviveram ao refresh e ao reinício real da API; backup sintético restaurado em volume e API separados preservou esses dados, URL, score e histórico.
 - **D — currículo adaptado:** E2E validou geração e download de PDF e `.tex`; teste especial validou falha real do compilador com download do `.tex`. A seleção de conteúdo usa perfil confirmado; revisar fatos e dados ausentes em novos casos.
 - **E — falhas:** há testes de rede/timeout, PDF inválido, protegido, truncado e vazio, fonte com erro e falha LaTeX. Não se conclui que todos os cenários ou toda a interface foram exaustivamente testados.
 
@@ -36,7 +36,7 @@ P2, P4 e P3 foram confirmadas como Concluídas no Notion após as validações d
 2. Manter as limitações de **P2** documentadas: PDFs em colunas/digitalizados podem exigir correção manual e não há OCR. Reabrir a tarefa se uma regressão for reproduzida.
 3. Manter as limitações de **P4** documentadas; reinício de API e restauração de backup foram validados com volumes sintéticos. Preservar `.data/` do usuário; não introduzir PostgreSQL por padrão.
 4. Manter as limitações de **P3** documentadas e reabrir em caso de regressão. Sem login, bypass, scraping não autorizado ou candidatura automática.
-5. Consolidar **P5**: repetir fluxos A–E, lint, tipos, testes, build, Compose e CI; revisar exceções, dados pessoais, README e operação em ambiente limpo. Atualizar o Notion com evidências, sem concluir fases por mera existência de código.
+5. Concluir **P5**: revisar casos de exceção e privacidade ainda não demonstrados, confirmar os fluxos A–E em instalação limpa e verificar a CI remota dos commits locais quando a publicação for autorizada. A CI atual publicada não cobre o novo mypy. Atualizar o Notion com evidências, sem concluir fases por mera existência de código.
 
 ## Comandos para retomar
 
@@ -54,7 +54,9 @@ Para executar a aplicação local, use `docker compose up --build` e acesse `htt
 Verificações do projeto, conforme `AGENTS.md`:
 
 ```sh
+uv sync --locked
 uv run pytest
+uv run --locked --no-sync mypy career
 ruff check --select E9,F63,F7,F82 career tests
 cd web
 bun install --frozen-lockfile
