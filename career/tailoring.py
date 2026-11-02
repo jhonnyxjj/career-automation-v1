@@ -34,6 +34,6 @@ class ResumeTailoringService:
     def _prioritize(items: list[object], job_text: str, job_terms: set[str]) -> list[object]:
         def relevance(item: object) -> int:
             text = normalized_text(" ".join(str(value) for value in item.__dict__.values() if value))
-            return sum(term in text for term in job_terms) + sum(word in text for word in job_text.split() if len(word) > 4)
+            return sum(bool(term) and bool(re.search(rf"(?<!\w){re.escape(term)}(?!\w)", text)) for term in job_terms) + sum(word in text for word in job_text.split() if len(word) > 4)
 
         return sorted(items, key=relevance, reverse=True)

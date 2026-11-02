@@ -40,3 +40,14 @@ def test_java_does_not_match_javascript() -> None:
     ])
     job = JobListing(source="source", title="JavaScript and Python", company="Acme", url="https://example.com", technologies=["Python"])
     assert ResumeTailoringService().tailor(candidate, job).technical_skills[0].items == ["Python", "Java"]
+
+
+def test_java_vacancy_prioritizes_java_experience_over_javascript() -> None:
+    candidate = CandidateProfile(id="1", personal=ResumePersonalDetails(name="Pessoa"), experiences=[
+        ResumeExperience(company="JavaScript", position="Dev", period="2023", bullets=["Usei JavaScript"]),
+        ResumeExperience(company="Java", position="Dev", period="2024", bullets=["Usei Java"]),
+    ])
+    job = JobListing(source="source", title="Dev", company="Acme", url="https://example.com", technologies=["Java"])
+    tailored = ResumeTailoringService().tailor(candidate, job)
+    assert [experience.company for experience in tailored.experiences] == ["Java", "JavaScript"]
+    assert [experience.company for experience in candidate.experiences] == ["JavaScript", "Java"]
