@@ -40,3 +40,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - **Próxima ação:** continuar P1 revisando outras expressões e combinações geográficas, sem presumir elegibilidade; depois seguir P2 e P4. P1–P5 continuam em Backlog no Notion porque seus critérios ainda não foram integralmente comprovados.
 - **CI e publicação:** o último run remoto do commit `2a74073` falhou no typecheck frontend; `59816a1` corrige o problema e passou em cópia limpa local, mas os commits posteriores ainda não foram enviados nem executados no GitHub. Não fazer push sem solicitação explícita.
 - **Estado local:** preservar a modificação anterior em `.agents/memory.md` e o arquivo não rastreado `CONTINUIDADE.md`. Este registro é mais recente que aquele relatório. Os serviços principais em execução ainda correspondem à imagem anterior; as mudanças novas foram verificadas em containers e dados sintéticos isolados.
+
+### Incremento P1 — região não informada
+
+- `bf95f8d` encaminha para revisão vagas cuja localização informa somente modalidade remota, sem presumir país nem classificá-las como região proibida. Os cenários “Remote”, “Remoto”, “Home office” e “Work from home” falharam antes da correção; foram adicionados casos de pontuação, texto vazio e integração da busca.
+- Verificações: 117 testes Python e Ruff focado passaram; após acrescentar dois casos adicionais, os 28 testes direcionados de filtros/busca passaram. A CI remota continua reprovada no commit anterior e as correções locais ainda não foram publicadas.
+- Próxima ação: continuar P1 pela detecção de requisitos sênior explícitos e cenários de falha; P1 permanece em Backlog até comprovar os demais critérios.
