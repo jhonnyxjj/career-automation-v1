@@ -22,6 +22,8 @@ Com a aplicação parada (`docker compose down`), copie a pasta `.data/` inteira
 
 O Compose publica as portas apenas em `127.0.0.1`. Não compartilhe `.data/`, currículos, arquivos `.env` ou backups. Fontes externas recebem solicitações de busca; textos colados na importação manual não são enviados automaticamente ao site de origem. A API rejeita localhost e endereços IP privados literais nos links manuais, mas não resolve DNS; portanto, a validação não garante que todo domínio aponte para uma rede pública. Não há OCR, integração com e-mail, login automatizado ou candidatura automática.
 
+O container da API desativa os logs de acesso HTTP para não registrar caminhos e parâmetros das requisições. Logs de inicialização e erros continuam ativos e devem ser tratados como potencialmente sensíveis; a ausência de um marcador nos testes não comprova que todo conteúdo pessoal esteja excluído de todos os erros.
+
 - Se a interface não abrir, confira `docker compose ps` e `docker compose logs` sem compartilhar logs que possam conter dados pessoais.
 - Se o PDF não for gerado, baixe o `.tex` e verifique a instalação LaTeX. O original permanece preservado.
 - Se uma fonte falhar, consulte o relatório; as demais podem retornar resultados independentemente.

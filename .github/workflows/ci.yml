@@ -60,5 +60,10 @@ jobs:
       - run: docker compose -p career-v11-e2e -f compose.e2e.yaml up -d --build
       - run: bunx playwright test
         working-directory: web
+      - name: Check API access-log privacy
+        run: |
+          curl --fail --silent 'http://127.0.0.1:18000/health?marker=synthetic_private_probe' > /dev/null
+          api_logs=$(docker compose -p career-v11-e2e -f compose.e2e.yaml logs --no-color api)
+          [[ "$api_logs" != *synthetic_private_probe* ]]
       - if: always()
         run: docker compose -p career-v11-e2e -f compose.e2e.yaml down
