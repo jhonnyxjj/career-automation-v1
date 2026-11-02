@@ -57,3 +57,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 
 - `b90e535` deixa a data de publicação do Greenhouse desconhecida em vez de usar `updated_at`. O teste reproduziu o erro antes da mudança; a suíte com lockfile passou depois com 129 testes, e o lint Ruff focado passou. A listagem pública não apresentou data de primeira publicação no exemplo da documentação oficial; não foi adicionada uma consulta por vaga.
 - Próxima ação: concluir a revisão de P1, incluindo elegibilidade, erros de rede e persistência dos resultados, antes de alterar o status da fase. A CI remota da correção continua pendente de publicação autorizada.
+
+### Incremento P1 — requisitos staff, lead e arquitetura
+
+- `3c25286` amplia o filtro de requisitos explícitos para staff, lead e arquiteto, preservando nos testes as menções a colegas. Três requisitos eram aceitos antes da mudança e foram corrigidos.
+- Verificações: 134 testes Python e lint Ruff focado passaram com dependências travadas. A identificação continua heurística e não reconhece todas as formulações ou contextos possíveis.
+- Próxima ação: concluir a revisão de P1, em especial riscos de falsa classificação e tratamento de erros de interface; não alterar o status no Notion até comprovar os critérios da fase. A CI remota das alterações locais ainda depende de push solicitado pelo usuário.
