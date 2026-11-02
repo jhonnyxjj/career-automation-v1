@@ -154,3 +154,18 @@ def test_unrecognized_location_is_reviewed_instead_of_rejected(location):
 def test_restriction_on_another_region_is_reviewed(location):
     profile = javascript_profile(allowed_regions={'brazil', 'global'})
     assert hard_filter(job(location=location), profile).reason == 'REGION_UNKNOWN'
+
+
+@pytest.mark.parametrize('location', [
+    'Brazil except Rio de Janeiro',
+    'Brazil excluding Canada',
+    'Worldwide except Brazil and Canada',
+])
+def test_compound_geographic_restrictions_need_review(location):
+    profile = javascript_profile(allowed_regions={'brazil', 'global'})
+    assert hard_filter(job(location=location), profile).reason == 'REGION_UNKNOWN'
+
+
+def test_exclusion_of_one_of_multiple_preferred_regions_needs_review():
+    profile = javascript_profile(allowed_regions={'brazil', 'canada', 'global'})
+    assert hard_filter(job(location='Worldwide except Brazil'), profile).reason == 'REGION_UNKNOWN'

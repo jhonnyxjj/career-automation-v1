@@ -51,10 +51,14 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
         if not location or location in {"remote", "remoto", "home office", "work from home"}:
             return FilterResult(accepted=False, reason="REGION_UNKNOWN")
         if not _matches_region(job, profile.allowed_regions):
-            if (re.search(r"\b(except|excluding|excluded|not|outside|exceto|excluindo|nao|fora)\b", location)
-                    and not any(_contains_region_alias(location, _REGION_ALIASES.get(region, ()))
-                                for region in profile.allowed_regions - {"global"})):
-                return FilterResult(accepted=False, reason="REGION_UNKNOWN")
+            if re.search(r"\b(except|excluding|excluded|not|outside|exceto|excluindo|nao|fora)\b", location):
+                excludes_brazil = re.fullmatch(
+                    r"(?:worldwide|global|anywhere|remote|remoto)\s+"
+                    r"(?:except|excluding|outside|exceto|excluindo|fora do|fora da)\s+(?:brazil|brasil)",
+                    location,
+                )
+                reason = "REGION_NOT_ALLOWED" if excludes_brazil and profile.allowed_regions - {"global"} == {"brazil"} else "REGION_UNKNOWN"
+                return FilterResult(accepted=False, reason=reason)
             recognized = location in _GLOBAL_LOCATIONS or any(_contains_region_alias(location, aliases) for aliases in _REGION_ALIASES.values())
             return FilterResult(accepted=False, reason="REGION_NOT_ALLOWED" if recognized else "REGION_UNKNOWN")
         if _has_geographic_restriction(job.description):
