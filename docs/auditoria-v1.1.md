@@ -150,3 +150,9 @@ Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local
 - `a9d71fa` adiciona E2E com template inválido montado exclusivamente no Compose isolado. O `pdflatex` estava instalado; o navegador recebeu a resposta real de falha e baixou o `.tex` com os dados sintéticos. O procedimento está em `docs/operacao.md` e o teste especial é desativado na suíte normal.
 - Verificações: o E2E especial passou; após restaurar o template normal, três testes Playwright passaram e o teste especial foi ignorado como esperado. Lint, typecheck e validação do Compose especial passaram. A etapa foi registrada no Notion; P2 permanece Em Andamento.
 - Próxima ação: testar PDFs de layouts variados e preservação de versões, revisar o aceite restante da P2 e continuar P4, P3 e P5. Não fazer push automático; preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes.
+
+### P2 — preservação ao trocar currículo
+
+- `9fead3d` valida pela API a troca entre dois PDFs sintéticos: o perfil anterior permanece ativo até confirmar o novo; ambos os perfis e originais continuam disponíveis, com comparação byte a byte. A restauração foi verificada em novo cliente de teste, sem reiniciar containers.
+- Verificações: 189 testes Python e Ruff focado passaram; permanece aviso de depreciação Starlette/httpx. O resultado foi registrado no Notion; P2 permanece Em Andamento.
+- Próxima ação: validar PDFs de layouts variados e os critérios restantes de P2; depois P4, P3 e P5. Commits posteriores a `da4ab48` continuam locais; preservar `.agents/memory.md` e `CONTINUIDADE.md` preexistentes e não fazer push automático.
