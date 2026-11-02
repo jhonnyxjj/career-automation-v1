@@ -68,3 +68,28 @@ test("invalid PDF reports an error without hanging", async ({ page }) => {
   await expect(page.getByRole("alert").filter({ hasText: "PDF válido" })).toBeVisible();
   await expect(page.getByText("Identificando perfil...")).toHaveCount(0);
 });
+
+test("search shows uncertain location and partial source failure", async ({ page }) => {
+  await page.goto("/");
+  const replacement = page.getByText("Trocar currículo");
+  if (await replacement.isVisible()) await replacement.click();
+  await page.locator('input[type="file"]').first().setInputFiles(path.join(__dirname, "resume-fixture.pdf"));
+  await page.getByRole("button", { name: "Salvar e confirmar" }).click();
+  await expect(page.getByText("Perfil salvo e confirmado.")).toBeVisible();
+  await page.route("**/jobs/search", (route) => route.request().method() === "OPTIONS"
+    ? route.continue()
+    : route.fulfill({ headers: { "access-control-allow-origin": "http://localhost:13000" }, json: {
+      jobs: [],
+      needs_review: [{ job: { source: "Fonte teste", title: "Backend Junior", company: "Empresa fictícia", url: "https://example.com/review" }, reason: "REGION_UNKNOWN" }],
+      reports: [
+        { source: "Fonte teste", status: "OK", count: 1 },
+        { source: "Fonte indisponível", status: "ERROR", count: 0, message: "Falha ao consultar a fonte." },
+      ],
+    } }));
+  await page.getByRole("button", { name: "Buscar vagas" }).click();
+  await expect(page.getByRole("heading", { name: "Vagas para avaliar" })).toBeVisible();
+  await expect(page.getByText("Localização ou elegibilidade geográfica precisa de confirmação")).toBeVisible();
+  await page.getByText("Relatório das fontes").click();
+  await expect(page.getByText("Fonte indisponível: ERROR · 0 vaga(s) · Falha ao consultar a fonte.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Buscar vagas" })).toBeEnabled();
+});
