@@ -142,3 +142,9 @@ def test_explicit_staff_lead_or_architect_requirement_is_rejected(description):
 ])
 def test_staff_lead_or_architect_coworker_mention_remains_eligible(description):
     assert hard_filter(job(title='Backend Developer Junior', seniority='junior', description=description), javascript_profile()).accepted
+
+
+@pytest.mark.parametrize('location', ['Lisboa', 'Toronto', 'Não informado', 'Niterói, RJ', 'Tuktoyaktuk'])
+def test_unrecognized_location_is_reviewed_instead_of_rejected(location):
+    profile = javascript_profile(allowed_regions={'brazil', 'global'})
+    assert hard_filter(job(location=location), profile).reason == 'REGION_UNKNOWN'

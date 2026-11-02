@@ -8,6 +8,17 @@ from .models import FilterResult, JobListing, SearchProfile
 from .normalizer import normalized_text
 
 
+_REGION_ALIASES = {
+    "brazil": ("brazil", "brasil", "rio de janeiro", "petropolis"),
+    "united_states": ("united states", "usa", "u.s."),
+    "canada": ("canada",),
+    "europe": ("europe", "europa", "germany", "france", "portugal", "spain", "netherlands"),
+    "united_kingdom": ("united kingdom", "uk", "england", "reino unido"),
+    "latin_america": ("latin america", "america latina", "mexico", "argentina", "chile", "colombia"),
+}
+_GLOBAL_LOCATIONS = {"worldwide", "global", "anywhere", "remote worldwide", "remote - worldwide"}
+
+
 def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = None) -> FilterResult:
     text = normalized_text(" ".join(filter(None, (job.title, job.description))))
     title = normalized_text(job.title)
@@ -40,7 +51,8 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
         if not location or location in {"remote", "remoto", "home office", "work from home"}:
             return FilterResult(accepted=False, reason="REGION_UNKNOWN")
         if not _matches_region(job, profile.allowed_regions):
-            return FilterResult(accepted=False, reason="REGION_NOT_ALLOWED")
+            recognized = location in _GLOBAL_LOCATIONS or any(_contains_region_alias(location, aliases) for aliases in _REGION_ALIASES.values())
+            return FilterResult(accepted=False, reason="REGION_NOT_ALLOWED" if recognized else "REGION_UNKNOWN")
         if _has_geographic_restriction(job.description):
             return FilterResult(accepted=False, reason="REGION_UNKNOWN")
         if job.workplace_type in {"hybrid", "onsite"} and "brazil" in profile.allowed_regions and _matches_region(job, {"brazil"}):
@@ -92,20 +104,14 @@ def _matches_region(job: JobListing, allowed_regions: set[str]) -> bool:
     location = normalized_text(job.location)
     if re.search(r"\b(except|excluding|excluded|not|outside|exceto|excluindo|nao|fora)\b", location):
         return False
-    aliases = {
-        "brazil": ("brazil", "brasil", "rio de janeiro", "petropolis"),
-        "united_states": ("united states", "usa", "u.s."),
-        "canada": ("canada",),
-        "europe": ("europe", "europa", "germany", "france", "portugal", "spain", "netherlands"),
-        "united_kingdom": ("united kingdom", "uk", "england", "reino unido"),
-        "latin_america": ("latin america", "america latina", "mexico", "argentina", "chile", "colombia"),
-    }
     specific_regions = allowed_regions - {"global"}
-    if any(alias in location for region in specific_regions for alias in aliases.get(region, ())):
+    if any(_contains_region_alias(location, _REGION_ALIASES.get(region, ())) for region in specific_regions):
         return True
-    return job.workplace_type == "remote" and "global" in allowed_regions and location in {
-        "worldwide", "global", "anywhere", "remote worldwide", "remote - worldwide",
-    }
+    return job.workplace_type == "remote" and "global" in allowed_regions and location in _GLOBAL_LOCATIONS
+
+
+def _contains_region_alias(location: str, aliases: tuple[str, ...]) -> bool:
+    return any(re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", location) for alias in aliases)
 
 
 def _has_geographic_restriction(description: str | None) -> bool:
