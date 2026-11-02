@@ -14,7 +14,7 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
 
     if job.expired:
         return FilterResult(accepted=False, reason="EXPIRED")
-    if job.seniority == "senior" or any(term in title for term in SENIOR_TITLE_TERMS) or _requires_senior_experience(job.description):
+    if job.seniority == "senior" or any(term in title for term in SENIOR_TITLE_TERMS) or _requires_senior_level(job.description):
         return FilterResult(accepted=False, reason="SENIORITY_NOT_ALLOWED")
     if job.seniority and job.seniority not in profile.allowed_seniorities:
         return FilterResult(accepted=False, reason="SENIORITY_NOT_ALLOWED")
@@ -63,11 +63,12 @@ def hard_filter(job: JobListing, profile: SearchProfile, now: datetime | None = 
     return FilterResult(accepted=True)
 
 
-def _requires_senior_experience(description: str | None) -> bool:
+def _requires_senior_level(description: str | None) -> bool:
+    level = r"(?:senior|staff|lead|arquiteto|architect)"
     patterns = (
-        r"\b(?:requer|exige|exigimos)\s+(?:experiencia|perfil|nivel)\s+senior\b",
-        r"\b(?:requires?|must have)\s+senior(?:[- ]level)?\s+experience\b",
-        r"\bsenior\s+experience\s+(?:is\s+)?required\b",
+        rf"\b(?:requer|exige|exigimos)\s+(?:experiencia|perfil|nivel)\s+(?:de\s+)?{level}\b",
+        rf"\b(?:requires?|must have)\s+{level}(?:[- ]level)?\s+experience\b",
+        rf"\b{level}\s+experience\s+(?:is\s+)?required\b",
     )
     for sentence in re.split(r"[.;\n]", description or ""):
         value = normalized_text(sentence)

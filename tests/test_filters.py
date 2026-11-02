@@ -124,3 +124,21 @@ def test_explicit_senior_requirement_is_rejected(description):
 ])
 def test_senior_coworker_mention_is_not_a_requirement(description):
     assert hard_filter(job(title='Backend Developer Junior', seniority='junior', description=description), javascript_profile()).accepted
+
+
+@pytest.mark.parametrize('description', [
+    'Exige perfil de arquiteto para desenvolvimento backend.',
+    'Requires staff-level experience in backend development.',
+    'Requires lead experience in backend development.',
+])
+def test_explicit_staff_lead_or_architect_requirement_is_rejected(description):
+    result = hard_filter(job(title='Backend Developer Junior', seniority='junior', description=description), javascript_profile())
+    assert result.reason == 'SENIORITY_NOT_ALLOWED'
+
+
+@pytest.mark.parametrize('description', [
+    'Colaboração com a liderança e o arquiteto da equipe backend.',
+    'Junior developer works with staff and lead engineers.',
+])
+def test_staff_lead_or_architect_coworker_mention_remains_eligible(description):
+    assert hard_filter(job(title='Backend Developer Junior', seniority='junior', description=description), javascript_profile()).accepted
