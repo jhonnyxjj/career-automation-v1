@@ -4,7 +4,7 @@ import shutil
 import httpx
 import pytest
 from fastapi.testclient import TestClient
-from pypdf import PdfWriter
+from pypdf import PdfReader, PdfWriter
 from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
 from career import api, profile_store, tracker
@@ -66,6 +66,32 @@ def test_real_text_pdf_sections_can_be_confirmed_and_restored(monkeypatch, tmp_p
         assert client.post(f"/profile/{profile['id']}/confirm", json=profile).status_code == 200
         assert client.get('/profile/current').json()['personal']['name'] == 'Pessoa Confirmada'
         assert (tmp_path / 'resumes' / 'original' / f"{profile['id']}.pdf").read_bytes() == pdf
+
+
+def test_multipage_text_pdf_extracts_sections_across_pages(monkeypatch, tmp_path):
+    monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path / "resumes")
+    page_contents = [
+        b'BT /F1 14 Tf 72 720 Td (Pessoa Teste) Tj 0 -20 Td (Resumo) Tj 0 -20 Td (Desenvolvedora backend.) Tj ET',
+        b'BT /F1 14 Tf 72 720 Td (Experiencia) Tj 0 -20 Td (Desenvolvedora | Empresa | 2020-2024) Tj 0 -20 Td (- Criou APIs.) Tj ET',
+        b'BT /F1 14 Tf 72 720 Td (Formacao) Tj 0 -20 Td (Computacao | Universidade | 2016-2020) Tj ET',
+    ]
+    writer = PdfWriter()
+    for content in page_contents:
+        writer.add_page(PdfReader(BytesIO(_synthetic_pdf(content))).pages[0])
+    output = BytesIO()
+    writer.write(output)
+
+    with TestClient(api.app) as client:
+        response = client.post('/profiles/upload', files={'file': ('multipage.pdf', output.getvalue(), 'application/pdf')})
+
+    assert response.status_code == 200
+    profile = response.json()['profile']
+    assert profile['personal']['name'] == 'Pessoa Teste'
+    assert profile['professional_summary'] == 'Desenvolvedora backend.'
+    assert profile['experiences'][0]['company'] == 'Empresa'
+    assert profile['experiences'][0]['bullets'] == ['Criou APIs.']
+    assert profile['education'][0]['institution'] == 'Universidade'
 
 
 def test_replacing_resume_preserves_both_originals_and_confirmed_profiles(monkeypatch, tmp_path):
