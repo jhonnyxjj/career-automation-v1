@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import os
+import re
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
@@ -76,8 +78,22 @@ class ManualJobImportRequest(BaseModel):
         if value is None:
             return value
         parsed = urlparse(value)
-        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        if (parsed.scheme not in {"http", "https"} or not parsed.hostname
+                or "\\" in parsed.netloc or any(ord(char) <= 32 or ord(char) == 127 for char in value)):
             raise ValueError("URL deve ser HTTP(S) absoluta.")
+        host = parsed.hostname.rstrip(".").casefold()
+        if not host or "%" in host or host == "localhost" or host.endswith((".localhost", ".local")):
+            raise ValueError("URL local ou privada não é permitida.")
+        try:
+            address = ipaddress.ip_address(host)
+        except ValueError:
+            if ":" in host or "." not in host or re.fullmatch(r"(?:0x[0-9a-f]+|\d+)(?:\.(?:0x[0-9a-f]+|\d+))*", host):
+                raise ValueError("URL local ou privada não é permitida.") from None
+        else:
+            if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
+                address = address.ipv4_mapped
+            if not address.is_global or address.is_multicast or address.is_reserved:
+                raise ValueError("URL local ou privada não é permitida.")
         return value
 
 
