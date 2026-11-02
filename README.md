@@ -18,6 +18,8 @@ Abra `http://localhost:3000`. A API fica em `http://localhost:8000`, e a documen
 
 Os currículos e resultados ficam somente em `.data/` no seu computador. A busca de vagas requer internet; identificação do perfil e geração de currículo usam os dados locais já armazenados.
 
+As variáveis locais são opcionais: os padrões estão em `.env.example`. Se precisar alterá-los, crie um `.env` a partir desse exemplo sem sobrescrever uma configuração existente. `CAREER_ALLOWED_ORIGINS` define as origens aceitas pela API; `NEXT_PUBLIC_API_BASE_URL` é o endereço da API usado pelo navegador e é incorporado na imagem web durante o build. Após alterá-lo, reconstrua com `docker compose up --build`. As portas continuam restritas a `127.0.0.1`.
+
 Para encerrar:
 
 ```powershell
