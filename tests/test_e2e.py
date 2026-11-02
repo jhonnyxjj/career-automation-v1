@@ -67,6 +67,30 @@ def test_real_text_pdf_sections_can_be_confirmed_and_restored(monkeypatch, tmp_p
         assert (tmp_path / 'resumes' / 'original' / f"{profile['id']}.pdf").read_bytes() == pdf
 
 
+def test_replacing_resume_preserves_both_originals_and_confirmed_profiles(monkeypatch, tmp_path):
+    monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path / "resumes")
+    monkeypatch.setattr(profile_store, "RESUMES_DIR", tmp_path / "resumes")
+    first_pdf = _synthetic_pdf(b'BT /F1 14 Tf 72 720 Td (Primeira Pessoa) Tj ET')
+    second_pdf = _synthetic_pdf(b'BT /F1 14 Tf 72 720 Td (Segunda Pessoa) Tj ET')
+
+    with TestClient(api.app) as client:
+        first = client.post('/profiles/upload', files={'file': ('first.pdf', first_pdf, 'application/pdf')}).json()['profile']
+        assert client.post(f"/profile/{first['id']}/confirm", json=first).status_code == 200
+        second = client.post('/profiles/upload', files={'file': ('second.pdf', second_pdf, 'application/pdf')}).json()['profile']
+        assert first['id'] != second['id']
+        assert client.get('/profile/current').json()['id'] == first['id']
+        assert client.post(f"/profile/{second['id']}/confirm", json=second).status_code == 200
+
+    with TestClient(api.app) as restarted:
+        assert restarted.get('/profile/current').json()['id'] == second['id']
+        assert restarted.get(f"/profiles/{first['id']}").json()['personal']['name'] == 'Primeira Pessoa'
+        assert restarted.get(f"/profiles/{second['id']}").json()['personal']['name'] == 'Segunda Pessoa'
+    originals = tmp_path / 'resumes' / 'original'
+    assert (originals / f"{first['id']}.pdf").read_bytes() == first_pdf
+    assert (originals / f"{second['id']}.pdf").read_bytes() == second_pdf
+
+
 def test_password_protected_pdf_is_rejected_without_leaving_a_file(monkeypatch, tmp_path):
     monkeypatch.setattr(api, "RESUMES_DIR", tmp_path / "resumes")
     writer = PdfWriter()
