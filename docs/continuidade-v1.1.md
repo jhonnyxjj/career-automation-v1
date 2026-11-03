@@ -4,10 +4,10 @@ Atualizado em 2026-11-02. Este é um retrato para continuidade, não uma declara
 
 ## Estado de Git e cuidados
 
-- Repositório: `jhonnyxjj/career-automation-v1`, branch `main`. O último commit publicado é `a408ad1`; o último commit de código validado antes desta atualização é `3517082`. Confira `git status -sb` e `git log -10 --oneline` antes de continuar, pois há commits locais posteriores ao push.
+- Repositório: `jhonnyxjj/career-automation-v1`, branch `main`. Na redação deste registro, o último commit publicado é `391041c` e o último commit de código é `c938f83`. Confira `git status -sb` e `git log -10 --oneline` para verificar publicações posteriores.
 - `.agents/memory.md` e `CONTINUIDADE.md` eram alterações preexistentes; durante a execução, passaram a constar no commit `a4566bc`, criado fora destas entregas. Preserve seu conteúdo e confira o estado atual antes de editar.
 - Não versionar `.data/`, currículos, `.env`, credenciais ou backups. Não fazer push sem nova instrução. A aplicação principal pode estar em execução com imagens anteriores; um commit ou push não atualiza automaticamente seus containers.
-- A [CI do push `a408ad1`](https://github.com/jhonnyxjj/career-automation-v1/actions/runs/41459341087) terminou com sucesso: backend, frontend, Compose e navegador passaram. Os commits locais posteriores ainda não foram executados na CI remota.
+- A [CI do push `391041c`](https://github.com/jhonnyxjj/career-automation-v1/actions/runs/41526075138) terminou com sucesso: backend, frontend, Compose e navegador passaram, incluindo mypy. Verifique a CI do commit mais recente após publicação.
 
 ## O que existe e o que falta
 
@@ -18,7 +18,7 @@ Atualizado em 2026-11-02. Este é um retrato para continuidade, não uma declara
 | P2 — perfil e currículo | Upload, edição, confirmação, restauração, versões originais e adaptação validada com fatos confirmados; PDF/TeX e recuperação de falha real testados no navegador. Concluído no Notion após validação local de `f44a102`. | Extração estruturada reconhece formatos delimitados por `\|` e travessão com espaços; PDFs em colunas, digitalizados ou ambíguos podem exigir correção manual. Não há OCR. |
 | P4 — persistência e candidaturas | Perfil, buscas, vagas e funil persistidos; refresh, reinício real da API e restauração de backup sintético em API/volume separado foram validados, incluindo histórico e idempotência. Concluído no Notion. | Backup é manual, sem exportação na interface ou mesclagem; trava de concorrência é de um processo. Dados pessoais não foram usados nos testes. |
 | P3 — plataformas | Seis origens manuais testadas com exemplos sintéticos distintos; deduplicação entre portais validada em API e navegador; fontes complementares preservadas e falha parcial/429 testada. Concluído no Notion. | Sem ingestão automática de alertas ou retry/backoff de 429; disponibilidade real das fontes não foi exaustivamente verificada. Vagas idênticas com URLs e fingerprints diferentes podem não ser deduplicadas. Gupy/ProgramaThor automáticas aparecem como indisponíveis, não como coleta ativa. |
-| P5 — qualidade | Um clone Git limpo do commit `139207d` passou em 209 testes Python, mypy nos 34 arquivos, Ruff, sintaxe, lint/typecheck e cinco testes frontend, build/health Compose, quatro E2E normais e um E2E separado de falha real. O log de acesso não registrou marcador sintético. Notion: Em Andamento. | A CI remota verde cobre apenas `a408ad1`; executar CI dos commits locais após publicação autorizada. Mypy usa configuração padrão, não estrita. Logs de erro permanecem ativos e podem conter dados sensíveis. |
+| P5 — qualidade | Um clone limpo de `139207d` passou em 209 testes Python, mypy, Ruff, lint/typecheck, cinco testes frontend, build Compose, quatro E2E normais e um E2E de falha real. Após correções de privacidade, 211 testes Python, mypy e Ruff passaram novamente. CI de `391041c` verde. Notion: Em Andamento. | Verificar CI dos commits posteriores. Mypy usa configuração padrão, não estrita. A ausência de dados pessoais em todos os caminhos de erro não foi comprovada; logs podem conter dados sensíveis. |
 
 P2, P4 e P3 foram confirmadas como Concluídas no Notion após as validações de 2026-11-02. P5 foi iniciada e permanece Em Andamento.
 
@@ -36,7 +36,7 @@ P2, P4 e P3 foram confirmadas como Concluídas no Notion após as validações d
 2. Manter as limitações de **P2** documentadas: PDFs em colunas/digitalizados podem exigir correção manual e não há OCR. Reabrir a tarefa se uma regressão for reproduzida.
 3. Manter as limitações de **P4** documentadas; reinício de API e restauração de backup foram validados com volumes sintéticos. Preservar `.data/` do usuário; não introduzir PostgreSQL por padrão.
 4. Manter as limitações de **P3** documentadas e reabrir em caso de regressão. Sem login, bypass, scraping não autorizado ou candidatura automática.
-5. Concluir **P5**: revisar casos de exceção e privacidade ainda não demonstrados e verificar a CI remota dos commits locais quando a publicação for autorizada. Os fluxos testados passaram em clone limpo, com fontes sintéticas; a CI publicada não cobre o novo mypy. Atualizar o Notion com evidências, sem concluir fases por mera existência de código.
+5. Concluir **P5**: verificar a CI remota mais recente e revisar os caminhos de exceção e privacidade ainda não demonstrados. Os fluxos testados passaram em clone limpo, com fontes sintéticas. Atualizar o Notion com evidências, sem concluir fases por mera existência de código.
 
 ## Comandos para retomar
 

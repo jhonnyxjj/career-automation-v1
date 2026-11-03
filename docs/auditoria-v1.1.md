@@ -1,5 +1,12 @@
 # Auditoria do backlog V1.1
 
+## Atualização de continuidade — 2026-11-02
+
+- A [CI de `391041c`](https://github.com/jhonnyxjj/career-automation-v1/actions/runs/41526075138) passou em backend, frontend, Compose e navegador, incluindo a verificação mypy. O Compose principal foi reconstruído e respondeu em loopback; não foram modificados dados pessoais para os testes.
+- `efbacca` evita que dados inválidos de vagas persistidas apareçam no traceback: o problema foi reproduzido e a correção verificada em servidor real com volume sintético isolado. `c938f83` trata dados inválidos de perfil de forma equivalente; teste de regressão cobre resposta genérica e preservação do arquivo.
+- Após as correções: 211 testes Python, mypy em 34 arquivos e Ruff focado passaram. A CI remota desses commits deve ser conferida após a publicação. Aviso existente: depreciação Starlette/httpx.
+- P0–P4 foram registradas como concluídas no Notion nas validações anteriores; P5 permanece em andamento até comprovação dos critérios restantes. Os testes não provam ausência de dados pessoais em todos os caminhos de erro; tratar logs como potencialmente sensíveis. Limitações e próximo passo estão em [continuidade-v1.1.md](continuidade-v1.1.md).
+
 Auditoria em 2026-11-01, sobre o commit publicado `2a74073` e a correção local `59816a1`. Fonte: [especificação](https://app.notion.com/p/40a27698d6818190bb0dc7eec7c7d489) e [quadro](https://app.notion.com/p/5cefab2cb8044bf2be9474a0baea3fff). As seis tarefas estavam em Backlog quando consultadas. Os estados abaixo são avaliações locais, não alterações automáticas do Notion.
 
 | Fase | Evidências | Pontos de aceite ainda pendentes ou insuficientemente verificados |
