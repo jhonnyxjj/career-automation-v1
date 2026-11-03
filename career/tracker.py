@@ -6,6 +6,8 @@ from pathlib import Path
 from threading import RLock
 from uuid import uuid4
 
+from pydantic import ValidationError
+
 from .models import JobListing, SearchResult
 from .normalizer import canonical_url, job_fingerprint
 from .profile_store import _atomic_write
@@ -13,6 +15,10 @@ from .profile_store import _atomic_write
 
 TRACKER_DIR = Path(".data") / "tracker"
 _lock = RLock()
+
+
+class TrackerDataError(Exception):
+    """Stored job data could not be read safely."""
 
 
 def _read(profile_id: str) -> dict:
@@ -35,7 +41,10 @@ def _now() -> str:
 
 def _upsert(state: dict, job: JobListing, *, update_existing: bool = True) -> dict:
     for entry in state["jobs"]:
-        existing = JobListing.model_validate(entry["job"])
+        try:
+            existing = JobListing.model_validate(entry["job"])
+        except (KeyError, TypeError, ValidationError):
+            raise TrackerDataError("Dados de acompanhamento inválidos.") from None
         same_id = job.external_id and existing.external_id == job.external_id and existing.source == job.source
         if same_id or canonical_url(existing.url) == canonical_url(job.url) or job_fingerprint(existing) == job_fingerprint(job):
             if update_existing:

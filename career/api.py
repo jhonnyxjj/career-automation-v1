@@ -9,9 +9,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
 from .config import TECH_CATALOG
@@ -23,13 +23,20 @@ from .scorer import score_job
 from .profile_parser import parse_candidate_profile
 from .profile_api import router as profile_router
 from .tracker_api import router as tracker_router
-from .tracker import save_job, save_search
+from .tracker import TrackerDataError, save_job, save_search
 from .resume_storage import RESUMES_DIR, ResumeRepository
 from .sources import default_sources
 
 
 MAX_RESUME_SIZE = 10 * 1024 * 1024
 app = FastAPI(title="Career Automation API")
+
+
+@app.exception_handler(TrackerDataError)
+async def tracker_data_error_handler(_request: Request, _error: TrackerDataError) -> JSONResponse:
+    return JSONResponse(status_code=500, content={"detail": "Dados de acompanhamento inválidos."})
+
+
 app.include_router(profile_router)
 app.include_router(tracker_router)
 allowed_origins = [origin for origin in os.getenv("CAREER_ALLOWED_ORIGINS", "http://localhost:3000").split(",") if origin]

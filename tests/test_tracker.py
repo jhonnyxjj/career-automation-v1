@@ -74,6 +74,30 @@ def test_corrupted_tracker_is_not_overwritten(client):
     assert path.read_text(encoding="utf-8") == "{bad json"
 
 
+def test_invalid_stored_job_returns_safe_error_without_overwriting_data(client, caplog):
+    from career.api import app
+
+    _, profile_id = client
+    tracker.save_job(profile_id, JobListing(source="Teste", title="Backend", company="Empresa", url="https://example.com/job"))
+    path = tracker.TRACKER_DIR / f"{profile_id}.json"
+    state = json.loads(path.read_text(encoding="utf-8"))
+    state['jobs'][0]['job']['url'] = 'synthetic_private_error_marker'
+    path.write_text(json.dumps(state), encoding='utf-8')
+    before = path.read_bytes()
+
+    with TestClient(app, raise_server_exceptions=False) as api:
+        response = api.post('/jobs/import', json={
+            'profile_id': profile_id, 'source': 'LinkedIn', 'title': 'Backend Junior',
+            'company': 'Outra empresa', 'description': 'Backend remoto',
+            'source_url': 'https://example.com/new', 'location': 'Brasil',
+        })
+
+    assert response.status_code == 500
+    assert response.json()['detail'] == 'Dados de acompanhamento inválidos.'
+    assert 'synthetic_private_error_marker' not in caplog.text
+    assert path.read_bytes() == before
+
+
 def test_search_endpoint_records_filters_and_result(client, monkeypatch):
     from career import api as main_api
     _, profile_id = client
