@@ -5,12 +5,25 @@ from pathlib import Path
 import shutil
 from uuid import uuid4
 
+from pydantic import ValidationError
+
 from .latex import LaTeXRenderer
 from .models import CandidateProfile, GeneratedResume, JobListing
 from .tailoring import ResumeTailoringService
 
 
 RESUMES_DIR = Path(".data") / "resumes"
+
+
+class ProfileDataError(Exception):
+    """A stored profile cannot be safely loaded."""
+
+
+def read_profile(path: Path) -> CandidateProfile:
+    try:
+        return CandidateProfile.model_validate_json(path.read_text(encoding="utf-8"))
+    except ValidationError:
+        raise ProfileDataError("Dados do perfil inválidos.") from None
 
 
 class ResumeRepository:
@@ -30,13 +43,13 @@ class ResumeRepository:
             path = RESUMES_DIR / "original" / f"{profile_id}.json"
         if not path.exists():
             raise FileNotFoundError("Perfil não encontrado.")
-        return CandidateProfile.model_validate_json(path.read_text(encoding="utf-8"))
+        return read_profile(path)
 
     def load_confirmed(self, profile_id: str) -> CandidateProfile:
         path = RESUMES_DIR / "confirmed" / f"{profile_id}.json"
         if not path.exists():
             raise FileNotFoundError("Perfil confirmado não encontrado.")
-        return CandidateProfile.model_validate_json(path.read_text(encoding="utf-8"))
+        return read_profile(path)
 
     def generate_tailored(self, profile: CandidateProfile, job: JobListing) -> GeneratedResume:
         generated_id = str(uuid4())

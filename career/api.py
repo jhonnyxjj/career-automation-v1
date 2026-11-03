@@ -24,7 +24,7 @@ from .profile_parser import parse_candidate_profile
 from .profile_api import router as profile_router
 from .tracker_api import router as tracker_router
 from .tracker import TrackerDataError, save_job, save_search
-from .resume_storage import RESUMES_DIR, ResumeRepository
+from .resume_storage import RESUMES_DIR, ProfileDataError, ResumeRepository
 from .sources import default_sources
 
 
@@ -35,6 +35,11 @@ app = FastAPI(title="Career Automation API")
 @app.exception_handler(TrackerDataError)
 async def tracker_data_error_handler(_request: Request, _error: TrackerDataError) -> JSONResponse:
     return JSONResponse(status_code=500, content={"detail": "Dados de acompanhamento inválidos."})
+
+
+@app.exception_handler(ProfileDataError)
+async def profile_data_error_handler(_request: Request, _error: ProfileDataError) -> JSONResponse:
+    return JSONResponse(status_code=500, content={"detail": "Dados do perfil inválidos."})
 
 
 app.include_router(profile_router)

@@ -66,3 +66,23 @@ def test_confirming_candidate_subclass_keeps_original_identity(monkeypatch, tmp_
     ResumeRepository().save_original(original)
     result = profile_store.save_confirmed(profile_id, original)
     assert result.id == profile_id
+
+
+def test_invalid_stored_profile_returns_safe_error_without_overwriting(monkeypatch, tmp_path, caplog):
+    monkeypatch.setattr("career.resume_storage.RESUMES_DIR", tmp_path)
+    monkeypatch.setattr(profile_store, "RESUMES_DIR", tmp_path)
+    profile_id = str(uuid4())
+    original = CandidateProfile(id=profile_id, personal=ResumePersonalDetails(name="Pessoa"))
+    ResumeRepository().save_original(original)
+    profile_store.save_confirmed(profile_id, original)
+    path = tmp_path / 'confirmed' / f'{profile_id}.json'
+    path.write_text('{"id":"' + profile_id + '","personal":{"name":["synthetic_private_profile_marker"]}}', encoding='utf-8')
+    before = path.read_bytes()
+
+    with TestClient(api_app, raise_server_exceptions=False) as client:
+        responses = [client.get('/profile/current'), client.get(f'/profiles/{profile_id}')]
+
+    assert all(response.status_code == 500 for response in responses)
+    assert all(response.json()['detail'] == 'Dados do perfil inválidos.' for response in responses)
+    assert 'synthetic_private_profile_marker' not in caplog.text
+    assert path.read_bytes() == before

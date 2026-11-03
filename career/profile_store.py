@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 
 from .models import CandidateProfile, ResumeTemplateData
-from .resume_storage import RESUMES_DIR, ResumeRepository
+from .resume_storage import RESUMES_DIR, ProfileDataError, ResumeRepository, read_profile
 
 
 def _atomic_write(path: Path, content: str) -> None:
@@ -38,5 +38,8 @@ def save_confirmed(profile_id: str, data: ResumeTemplateData) -> CandidateProfil
 def load_current() -> CandidateProfile:
     profile_id = (RESUMES_DIR / "current-profile").read_text(encoding="utf-8").strip()
     from uuid import UUID
-    profile_id = str(UUID(profile_id))
-    return CandidateProfile.model_validate_json(confirmed_path(profile_id).read_text(encoding="utf-8"))
+    try:
+        profile_id = str(UUID(profile_id))
+    except ValueError:
+        raise ProfileDataError("Dados do perfil inválidos.") from None
+    return read_profile(confirmed_path(profile_id))
